@@ -1,10 +1,10 @@
 import logging
 import os
 import subprocess
-from os.path import isfile
 from time import sleep
 
 from admin import EXPLORER_SCRIPT_PATH, EXPLORERS_META_DATA_PATH, EXPLORER_VERSION
+from admin.utils import verified_contracts, update_meta_data, is_current_version
 from containers import (get_free_port, get_db_port, restart_nginx,
                         is_explorer_running, remove_explorer)
 from endpoints import read_json, get_all_names, get_schain_endpoint, write_json, is_dkg_passed
@@ -50,33 +50,6 @@ def run_explorer_for_schain(schain_name):
         logger.warning(f"Couldn't create blockexplorer instance for {schain_name}")
 
 
-def update_meta_data(schain_name, port, db_port, endpoint, ws_endpoint, version):
-    logger.info(f'Updating meta data for {schain_name}')
-    explorers = read_json(EXPLORERS_META_DATA_PATH) if isfile(EXPLORERS_META_DATA_PATH) else {}
-    schain_meta = explorers.get(schain_name, {})
-    schain_meta.update({
-        'port': port,
-        'db_port': db_port,
-        'endpoint': endpoint,
-        'ws_endpoint': ws_endpoint,
-        'version': version,
-    })
-    explorers.update({
-        schain_name: schain_meta
-    })
-    write_json(EXPLORERS_META_DATA_PATH, explorers)
-
-
-def is_current_version(schain_name):
-    explorers = read_json(EXPLORERS_META_DATA_PATH)
-    return explorers[schain_name].get('version') == EXPLORER_VERSION
-
-
-def verified_contracts(schain_name):
-    explorers = read_json(EXPLORERS_META_DATA_PATH)
-    return explorers[schain_name].get('contracts_verified') is True
-
-
 def run_iteration():
     explorers = read_json(EXPLORERS_META_DATA_PATH)
     schains = get_all_names()
@@ -101,8 +74,7 @@ def run_iteration():
 
 def main():
     if not os.path.isfile(EXPLORERS_META_DATA_PATH):
-        with open(EXPLORERS_META_DATA_PATH, 'w') as f:
-            f.write('{}')
+        write_json(EXPLORERS_META_DATA_PATH, {})
     while True:
         logger.info('Running new iteration...')
         run_iteration()

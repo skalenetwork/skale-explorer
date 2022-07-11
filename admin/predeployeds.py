@@ -7,10 +7,11 @@ from marionette_predeployed.marionette_generator import MarionetteGenerator
 from web3 import Web3, HTTPProvider
 
 from admin import (
-    SCHAIN_CONFIG_DIR_PATH, MAINNET_IMA_ABI_FILEPATH, PROXY_ADMIN_PREDEPLOYED_ADDRESS, BASE_ADDRESS,
-    ETHERBASE_ALLOC, SCHAIN_OWNER_ALLOC, NODE_OWNER_ALLOC, ZERO_ADDRESS, ENDPOINT, ABI_FILEPATH,
+    SCHAIN_CONFIG_DIR_PATH, PROXY_ADMIN_PREDEPLOYED_ADDRESS,
+    ETHERBASE_ALLOC, SCHAIN_OWNER_ALLOC, NODE_OWNER_ALLOC, ENDPOINT, ABI_FILEPATH,
     HOST_SCHAIN_CONFIG_DIR_PATH, EXPLORERS_META_DATA_PATH
 )
+from admin.utils import get_schain_originator
 from endpoints import read_json, schain_name_to_id
 
 from etherbase_predeployed import (
@@ -55,15 +56,6 @@ def generate_config(schain_name):
             f.write(json.dumps(config, indent=4))
     host_config_path = os.path.join(HOST_SCHAIN_CONFIG_DIR_PATH, f'{schain_name}.json')
     return host_config_path
-
-
-def get_ima_contracts():
-    mainnet_ima_abi = read_json(MAINNET_IMA_ABI_FILEPATH)
-    return generate_contracts(
-        owner_address=BASE_ADDRESS,
-        schain_name='schain',
-        contracts_on_mainnet=mainnet_ima_abi
-    )
 
 
 def generate_owner_accounts(schain_name):
@@ -113,17 +105,10 @@ def generate_verify_data():
     }
 
 
-def get_schain_originator(schain: dict):
-    if schain['originator'] == ZERO_ADDRESS:
-        return schain['mainnetOwner']
-    return schain['originator']
-
-
 def fetch_predeployed_info(schain_name, contract_addresses):
     predeployed_contracts = {}
-    with open(EXPLORERS_META_DATA_PATH) as explorers:
-        data = json.loads(explorers.read())
-        schain_endpoint = data[schain_name]['endpoint']
+    data = read_json(EXPLORERS_META_DATA_PATH)
+    schain_endpoint = data[schain_name]['endpoint']
     provider = HTTPProvider(schain_endpoint)
     web3 = Web3(provider)
     for address in contract_addresses:

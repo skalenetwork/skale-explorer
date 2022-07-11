@@ -133,4 +133,3 @@ dmypy.json
 __pycache__
 data/*
 !data/certs
-!data/configs
