@@ -173,3 +173,25 @@ def get_schain_endpoint(schain_name, ws=False):
             endpoint = node['https_endpoint_domain']
         if check_endpoint(endpoint, ws):
             return endpoint
+
+
+def get_schain_info(schain_name):
+    provider = HTTPProvider(ENDPOINT)
+    web3 = Web3(provider)
+    sm_abi = read_json(ABI_FILEPATH)
+    schains_internal_contract = web3.eth.contract(address=sm_abi['schains_internal_address'],
+                                                  abi=sm_abi['schains_internal_abi'])
+    nodes_contract = web3.eth.contract(address=sm_abi['nodes_address'], abi=sm_abi['nodes_abi'])
+
+    schain_id = bytes.fromhex(schain_name_to_id(schain_name)[2:])
+    schain_info = schains_internal_contract.functions.schains(schain_id).call()
+    node_ids = schains_internal_contract.functions.getNodesInGroup(schain_id).call()
+    wallets = []
+    for node_id in node_ids:
+        wallets.append(nodes_contract.functions.getNodeAddress(node_id).call())
+    return {
+        'mainnetOwner': schain_info[1],
+        'originator': schain_info[10],
+        'generation': schain_info[9],
+        'nodes': wallets
+    }

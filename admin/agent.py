@@ -14,7 +14,6 @@ from nginx import regenerate_nginx_config
 from predeployeds import generate_config
 from verify import verify
 
-init_logger()
 logger = logging.getLogger(__name__)
 
 
@@ -83,4 +82,6 @@ def main():
         sleep(sleep_time)
 
 
-main()
+if __name__ == '__main__':
+    init_logger()
+    main()

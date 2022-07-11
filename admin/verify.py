@@ -43,13 +43,6 @@ def verify(schain_name):
         write_json(EXPLORERS_META_DATA_PATH, data)
 
 
-def set_contract_verified(schain_name, address):
-    path = join(SCHAIN_CONFIG_DIR_PATH, f'{schain_name}.json')
-    config = read_json(path)
-    config['verification_status'][address] = True
-    write_json(path, config)
-
-
 def get_verified_contract_list(schain_name):
     data = read_json(EXPLORERS_META_DATA_PATH)
     schain_explorer_endpoint = f'http://127.0.0.1:{data[schain_name]["port"]}'

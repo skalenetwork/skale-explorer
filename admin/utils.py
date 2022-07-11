@@ -1,9 +1,11 @@
 import logging
+from os.path import join
 
-from admin import EXPLORERS_META_DATA_PATH, EXPLORER_VERSION, ZERO_ADDRESS
+from admin import EXPLORERS_META_DATA_PATH, EXPLORER_VERSION, ZERO_ADDRESS, SCHAIN_CONFIG_DIR_PATH
 from admin.endpoints import read_json, write_json
 
 logger = logging.getLogger(__name__)
+
 
 def verified_contracts(schain_name):
     explorers = read_json(EXPLORERS_META_DATA_PATH)
@@ -36,3 +38,11 @@ def get_schain_originator(schain: dict):
     if schain['originator'] == ZERO_ADDRESS:
         return schain['mainnetOwner']
     return schain['originator']
+
+
+def set_contract_verified(schain_name, address):
+    path = join(SCHAIN_CONFIG_DIR_PATH, f'{schain_name}.json')
+    config = read_json(path)
+    config['verification_status'][address] = True
+    write_json(path, config)
+
