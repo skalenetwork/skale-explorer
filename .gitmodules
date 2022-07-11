@@ -1,4 +1,4 @@
-[submodule "blockscout"]
+[submodule "deps/blockscout"]
 	path = deps/blockscout
 	url = https://github.com/skalenetwork/blockscout
 	branch = master
