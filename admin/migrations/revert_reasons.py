@@ -1,20 +1,16 @@
-import json
 import logging
 
 import psycopg2
 from psycopg2.extras import execute_values
 from web3 import HTTPProvider, Web3
-from admin import EXPLORERS_META_DATA_PATH
-from admin.meta import set_schain_upgraded
+from admin.meta import set_schain_upgraded, get_schain_meta
 
 logger = logging.getLogger(__name__)
 
 
 def upgrade_revert_reasons(schain_name):
     logger.info(f'Running revert_reason upgrade for {schain_name}')
-    with open(EXPLORERS_META_DATA_PATH) as f:
-        meta = json.loads(f.read())
-        schain_meta = meta[schain_name]
+    schain_meta = get_schain_meta(schain_name)
     conn = psycopg2.connect(
         host="localhost",
         database="explorer",
