@@ -130,3 +130,7 @@ dmypy.json
 
 # Additional
 .idea/
+__pycache__
+data/*
+!data/certs
+!data/configs
