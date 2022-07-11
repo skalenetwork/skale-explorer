@@ -8,6 +8,8 @@ import json
 from web3 import Web3
 
 from admin import SCHAIN_CONFIG_DIR_PATH, EXPLORERS_META_DATA_PATH
+from admin.meta import get_explorer_endpoint
+from admin.utils import set_contract_verified
 from endpoints import read_json, write_json
 
 logger = logging.getLogger(__name__)
@@ -19,17 +21,7 @@ def verify(schain_name):
     j = config['verify']
     for verifying_address in j.keys():
         if not config['verification_status'][verifying_address]:
-            logging.info(f'Verifying {verifying_address} contract')
-            contract_meta = j[verifying_address]
-            contract = {
-                'contractaddress': verifying_address,
-                'contractname': contract_meta['name'],
-                'compilerversion': f'v{contract_meta["solcLongVersion"]}',
-                'sourceCode': json.dumps(contract_meta['input'])
-            }
-            response = send_verify_request(schain_name, contract)
-            if response and check_verify_status(schain_name, response['result']):
-                set_contract_verified(schain_name, verifying_address)
+            verify_contract(schain_name, verifying_address, j[verifying_address])
     all_verified = True
     upd_config = read_json(join(SCHAIN_CONFIG_DIR_PATH, f'{schain_name}.json'))
     for verifying_address in j.keys():
@@ -43,9 +35,21 @@ def verify(schain_name):
         write_json(EXPLORERS_META_DATA_PATH, data)
 
 
+def verify_contract(schain_name, verifying_address, contract_meta):
+    logging.info(f'Verifying {verifying_address} contract')
+    contract = {
+        'contractaddress': verifying_address,
+        'contractname': contract_meta['name'],
+        'compilerversion': f'v{contract_meta["solcLongVersion"]}',
+        'sourceCode': json.dumps(contract_meta['input'])
+    }
+    response = send_verify_request(schain_name, contract)
+    if response and check_verify_status(schain_name, response['result']):
+        set_contract_verified(schain_name, verifying_address)
+
+
 def get_verified_contract_list(schain_name):
-    data = read_json(EXPLORERS_META_DATA_PATH)
-    schain_explorer_endpoint = f'http://127.0.0.1:{data[schain_name]["port"]}'
+    schain_explorer_endpoint = get_explorer_endpoint(schain_name)
     headers = {'content-type': 'application/json'}
     addresses = []
     try:
@@ -60,8 +64,7 @@ def get_verified_contract_list(schain_name):
 
 
 def get_veify_url(schain_name):
-    data = read_json(EXPLORERS_META_DATA_PATH)
-    schain_explorer_endpoint = f'http://127.0.0.1:{data[schain_name]["port"]}'
+    schain_explorer_endpoint = get_explorer_endpoint(schain_name)
     return f'{schain_explorer_endpoint}/api?module=contract&action=verifysourcecode&codeformat=solidity-standard-json-input'
 
 
@@ -78,8 +81,7 @@ def send_verify_request(schain_name, verification_data):
 
 
 def is_contract_verified(schain_name, address):
-    data = read_json(EXPLORERS_META_DATA_PATH)
-    schain_explorer_endpoint = f'http://127.0.0.1:{data[schain_name]["port"]}'
+    schain_explorer_endpoint = get_explorer_endpoint(schain_name)
     headers = {'content-type': 'application/json'}
     try:
         result = requests.get(
@@ -95,8 +97,7 @@ def check_verify_status(schain_name, uid):
     if uid == 'Smart-contract already verified':
         logger.info('Contract already verified')
         return True
-    data = read_json(EXPLORERS_META_DATA_PATH)
-    schain_explorer_endpoint = f'http://127.0.0.1:{data[schain_name]["port"]}'
+    schain_explorer_endpoint = get_explorer_endpoint(schain_name)
     headers = {'content-type': 'application/json'}
     try:
         while True:

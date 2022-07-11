@@ -5,7 +5,7 @@ import psycopg2
 from psycopg2.extras import execute_values
 from web3 import HTTPProvider, Web3
 from admin import EXPLORERS_META_DATA_PATH
-from admin.endpoints import write_json, read_json
+from admin.meta import set_schain_upgraded
 
 logger = logging.getLogger(__name__)
 
@@ -51,24 +51,6 @@ def upgrade_revert_reasons(schain_name):
                           WHERE decode(e.hash, 'hex') = t.hash;"""
         execute_values(cursor, update_query, data_to_update)
         conn.commit()
-
-
-def set_schain_upgraded(schain_name):
-    with open(EXPLORERS_META_DATA_PATH) as f:
-        meta = json.loads(f.read())
-        schain_meta = meta[schain_name]
-        schain_meta['updated'] = True
-        meta.update({
-            schain_name: schain_meta
-        })
-        write_json(EXPLORERS_META_DATA_PATH, meta)
-
-
-def is_schain_upgraded(schain_name):
-    explorers = read_json(EXPLORERS_META_DATA_PATH)
-    schain_meta = explorers.get(schain_name)
-    if not schain_meta or schain_meta.get('updated'):
-        return True
 
 
 def upgrade(schain_name):
