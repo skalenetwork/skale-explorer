@@ -7,23 +7,22 @@ import json
 
 from web3 import Web3
 
-from admin import SCHAIN_CONFIG_DIR_PATH, EXPLORERS_META_DATA_PATH
 from admin.configs.meta import get_explorer_endpoint, set_chain_verified
+from admin.configs.schains import get_schain_config
 from admin.utils import set_contract_verified
-from endpoints import read_json, write_json
 
 logger = logging.getLogger(__name__)
 
 
 def verify(schain_name):
     logger.info(f'Verifying contracts for {schain_name}')
-    config = read_json(join(SCHAIN_CONFIG_DIR_PATH, f'{schain_name}.json'))
+    config = get_schain_config(schain_name)
     verification_data = config['verify']
     for verifying_address in verification_data.keys():
         if not config['verification_status'][verifying_address]:
             verify_contract(schain_name, verifying_address, verification_data[verifying_address])
     all_verified = True
-    upd_config = read_json(join(SCHAIN_CONFIG_DIR_PATH, f'{schain_name}.json'))
+    upd_config = get_schain_config(schain_name)
     for verifying_address in verification_data.keys():
         if not upd_config['verification_status'][verifying_address]:
             logger.info(f'Contract {verifying_address} is not verified')

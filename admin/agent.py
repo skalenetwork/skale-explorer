@@ -11,7 +11,7 @@ from endpoints import read_json, get_all_names, get_schain_endpoint, write_json,
 from logger import init_logger
 from admin.migrations.revert_reasons import upgrade, set_schain_upgraded
 from admin.configs.nginx import regenerate_nginx_config
-from predeployeds import generate_config
+from admin.configs.schains import generate_config
 from verify import verify
 
 logger = logging.getLogger(__name__)

@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+from os.path import join
 
 from etherbase_predeployed.etherbase_upgradeable_generator import EtherbaseUpgradeableGenerator
 from marionette_predeployed.marionette_generator import MarionetteGenerator
@@ -8,11 +9,12 @@ from web3 import Web3, HTTPProvider
 
 from admin import (
     SCHAIN_CONFIG_DIR_PATH, PROXY_ADMIN_PREDEPLOYED_ADDRESS,
-    ETHERBASE_ALLOC, SCHAIN_OWNER_ALLOC, NODE_OWNER_ALLOC, ENDPOINT, ABI_FILEPATH,
-    HOST_SCHAIN_CONFIG_DIR_PATH, EXPLORERS_META_DATA_PATH
+    ETHERBASE_ALLOC, SCHAIN_OWNER_ALLOC, NODE_OWNER_ALLOC,
+    HOST_SCHAIN_CONFIG_DIR_PATH
 )
+from admin.configs.meta import get_schain_endpoint
+from admin.endpoints import write_json, get_schain_info, read_json
 from admin.utils import get_schain_originator
-from endpoints import read_json, schain_name_to_id, get_schain_info
 
 from etherbase_predeployed import (
     UpgradeableEtherbaseUpgradeableGenerator, ETHERBASE_ADDRESS, ETHERBASE_IMPLEMENTATION_ADDRESS
@@ -37,6 +39,10 @@ from ima_predeployed.generator import generate_contracts, generate_meta
 logger = logging.getLogger(__name__)
 
 
+def get_schain_config(schain_name):
+    return read_json(join(SCHAIN_CONFIG_DIR_PATH, f'{schain_name}.json'))
+
+
 def generate_config(schain_name):
     config_path = os.path.join(SCHAIN_CONFIG_DIR_PATH, f'{schain_name}.json')
     if not os.path.exists(config_path):
@@ -52,8 +58,7 @@ def generate_config(schain_name):
             'verify': verification_data,
             'verification_status': verification_status_data
         }
-        with open(config_path, 'w') as f:
-            f.write(json.dumps(config, indent=4))
+        write_json(config_path, config)
     host_config_path = os.path.join(HOST_SCHAIN_CONFIG_DIR_PATH, f'{schain_name}.json')
     return host_config_path
 
@@ -107,8 +112,7 @@ def generate_verify_data():
 
 def fetch_predeployed_info(schain_name, contract_addresses):
     predeployed_contracts = {}
-    data = read_json(EXPLORERS_META_DATA_PATH)
-    schain_endpoint = data[schain_name]['endpoint']
+    schain_endpoint = get_schain_endpoint(schain_name)
     provider = HTTPProvider(schain_endpoint)
     web3 = Web3(provider)
     for address in contract_addresses:
