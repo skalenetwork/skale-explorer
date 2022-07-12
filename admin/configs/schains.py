@@ -1,4 +1,3 @@
-import json
 import logging
 import os
 from os.path import join
@@ -13,8 +12,7 @@ from admin import (
     HOST_SCHAIN_CONFIG_DIR_PATH
 )
 from admin.configs.meta import get_schain_endpoint
-from admin.endpoints import write_json, get_schain_info, read_json
-from admin.utils import get_schain_originator
+from admin.core.endpoints import get_schain_info, read_json
 
 from etherbase_predeployed import (
     UpgradeableEtherbaseUpgradeableGenerator, ETHERBASE_ADDRESS, ETHERBASE_IMPLEMENTATION_ADDRESS
@@ -34,7 +32,9 @@ from config_controller_predeployed import (
 from multisigwallet_predeployed import MultiSigWalletGenerator, MULTISIGWALLET_ADDRESS
 from context_predeployed import ContextGenerator, CONTEXT_ADDRESS
 from predeployed_generator.openzeppelin.proxy_admin_generator import ProxyAdminGenerator
-from ima_predeployed.generator import generate_contracts, generate_meta
+from ima_predeployed.generator import generate_meta
+
+from admin.utils.helper import write_json, get_schain_originator
 
 logger = logging.getLogger(__name__)
 
@@ -122,3 +122,10 @@ def fetch_predeployed_info(schain_name, contract_addresses):
         else:
             add_to_accounts(predeployed_contracts, address, code=code)
     return predeployed_contracts
+
+
+def set_contract_verified(schain_name, address):
+    path = get_schain_config(schain_name)
+    config = read_json(path)
+    config['verification_status'][address] = True
+    write_json(path, config)

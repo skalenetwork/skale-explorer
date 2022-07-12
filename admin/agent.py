@@ -5,14 +5,15 @@ from time import sleep
 
 from admin import EXPLORER_SCRIPT_PATH, EXPLORERS_META_DATA_PATH, EXPLORER_VERSION
 from admin.configs.meta import is_current_version, is_schain_upgraded, verified_contracts, update_meta_data
-from containers import (get_free_port, get_db_port, restart_nginx,
-                        is_explorer_running, remove_explorer)
-from endpoints import read_json, get_all_names, get_schain_endpoint, write_json, is_dkg_passed
-from logger import init_logger
+from admin.core.containers import (get_free_port, get_db_port, restart_nginx,
+                                   is_explorer_running, remove_explorer)
+from admin.core.endpoints import read_json, get_all_names, get_schain_endpoint, is_dkg_passed
+from admin.utils.helper import write_json
+from admin.utils.logger import init_logger
 from admin.migrations.revert_reasons import upgrade, set_schain_upgraded
 from admin.configs.nginx import regenerate_nginx_config
 from admin.configs.schains import generate_config
-from verify import verify
+from admin.core.verify import verify
 
 logger = logging.getLogger(__name__)
 

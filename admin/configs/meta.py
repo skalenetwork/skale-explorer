@@ -2,7 +2,7 @@ import logging
 from os.path import isfile
 
 from admin import EXPLORERS_META_DATA_PATH, EXPLORER_VERSION
-from admin.endpoints import read_json, write_json
+from admin.utils.helper import read_json
 
 logger = logging.getLogger(__name__)
 

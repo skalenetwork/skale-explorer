@@ -3,7 +3,7 @@ import docker
 import socket
 from contextlib import closing
 
-from logger import init_logger
+from admin.utils.logger import init_logger
 
 init_logger()
 logger = logging.getLogger(__name__)

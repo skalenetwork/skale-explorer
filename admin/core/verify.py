@@ -1,5 +1,4 @@
 import logging
-from os.path import join
 from time import sleep
 
 import requests
@@ -8,8 +7,7 @@ import json
 from web3 import Web3
 
 from admin.configs.meta import get_explorer_endpoint, set_chain_verified
-from admin.configs.schains import get_schain_config
-from admin.utils import set_contract_verified
+from admin.configs.schains import get_schain_config, set_contract_verified
 
 logger = logging.getLogger(__name__)
 

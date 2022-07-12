@@ -1,8 +1,8 @@
+import json
 import logging
 from os.path import join
 
 from admin import ZERO_ADDRESS, SCHAIN_CONFIG_DIR_PATH
-from admin.endpoints import read_json, write_json
 
 logger = logging.getLogger(__name__)
 
@@ -13,9 +13,12 @@ def get_schain_originator(schain: dict):
     return schain['originator']
 
 
-def set_contract_verified(schain_name, address):
-    path = join(SCHAIN_CONFIG_DIR_PATH, f'{schain_name}.json')
-    config = read_json(path)
-    config['verification_status'][address] = True
-    write_json(path, config)
 
+def read_json(path, mode='r'):
+    with open(path, mode=mode, encoding='utf-8') as data_file:
+        return json.load(data_file)
+
+
+def write_json(path, content):
+    with open(path, 'w') as outfile:
+        json.dump(content, outfile, indent=4)

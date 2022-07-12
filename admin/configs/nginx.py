@@ -3,7 +3,7 @@ from admin import (NGINX_CONFIG_PATH, EXPLORERS_META_DATA_PATH, SSL_CRT_PATH,
                    SSL_KEY_PATH)
 import crossplane
 
-from endpoints import read_json
+from admin.utils.helper import read_json
 
 
 def generate_schain_nginx_config(schain_name, explorer_endpoint, ssl=False):
