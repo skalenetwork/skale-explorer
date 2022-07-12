@@ -60,3 +60,9 @@ def get_explorer_endpoint(schain_name):
 def get_schain_meta(schain_name):
     data = read_json(EXPLORERS_META_DATA_PATH)
     return data.get(schain_name)
+
+
+def set_chain_verified(schain_name):
+    data = read_json(EXPLORERS_META_DATA_PATH)
+    data[schain_name]['contracts_ verified'] = True
+    write_json(EXPLORERS_META_DATA_PATH, data)

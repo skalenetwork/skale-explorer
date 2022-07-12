@@ -8,7 +8,7 @@ import json
 from web3 import Web3
 
 from admin import SCHAIN_CONFIG_DIR_PATH, EXPLORERS_META_DATA_PATH
-from admin.meta import get_explorer_endpoint
+from admin.configs.meta import get_explorer_endpoint, set_chain_verified
 from admin.utils import set_contract_verified
 from endpoints import read_json, write_json
 
@@ -18,21 +18,19 @@ logger = logging.getLogger(__name__)
 def verify(schain_name):
     logger.info(f'Verifying contracts for {schain_name}')
     config = read_json(join(SCHAIN_CONFIG_DIR_PATH, f'{schain_name}.json'))
-    j = config['verify']
-    for verifying_address in j.keys():
+    verification_data = config['verify']
+    for verifying_address in verification_data.keys():
         if not config['verification_status'][verifying_address]:
-            verify_contract(schain_name, verifying_address, j[verifying_address])
+            verify_contract(schain_name, verifying_address, verification_data[verifying_address])
     all_verified = True
     upd_config = read_json(join(SCHAIN_CONFIG_DIR_PATH, f'{schain_name}.json'))
-    for verifying_address in j.keys():
+    for verifying_address in verification_data.keys():
         if not upd_config['verification_status'][verifying_address]:
             logger.info(f'Contract {verifying_address} is not verified')
             all_verified = False
     if all_verified:
         logger.info(f'All contracts are verified for {schain_name}')
-        data = read_json(EXPLORERS_META_DATA_PATH)
-        data[schain_name]['contracts_ verified'] = True
-        write_json(EXPLORERS_META_DATA_PATH, data)
+        set_chain_verified(schain_name)
 
 
 def verify_contract(schain_name, verifying_address, contract_meta):

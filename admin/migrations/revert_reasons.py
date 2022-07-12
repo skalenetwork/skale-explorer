@@ -3,7 +3,7 @@ import logging
 import psycopg2
 from psycopg2.extras import execute_values
 from web3 import HTTPProvider, Web3
-from admin.meta import set_schain_upgraded, get_schain_meta
+from admin.configs.meta import set_schain_upgraded, get_schain_meta
 
 logger = logging.getLogger(__name__)
 
