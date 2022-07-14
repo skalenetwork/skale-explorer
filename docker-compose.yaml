@@ -17,7 +17,7 @@ services:
       VERSION: ${VERSION}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./data:/admin/data
+      - ./data:/skale-explorer/data
       - ../docker:/docker
   nginx:
     image: nginx:1.19.6

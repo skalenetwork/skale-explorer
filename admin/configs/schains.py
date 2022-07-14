@@ -11,8 +11,7 @@ from admin import (
     ETHERBASE_ALLOC, SCHAIN_OWNER_ALLOC, NODE_OWNER_ALLOC,
     HOST_SCHAIN_CONFIG_DIR_PATH
 )
-from admin.configs.meta import get_schain_endpoint
-from admin.core.endpoints import get_schain_info, read_json
+from admin.core.endpoints import get_schain_info, get_schain_endpoint
 
 from etherbase_predeployed import (
     UpgradeableEtherbaseUpgradeableGenerator, ETHERBASE_ADDRESS, ETHERBASE_IMPLEMENTATION_ADDRESS
@@ -34,7 +33,7 @@ from context_predeployed import ContextGenerator, CONTEXT_ADDRESS
 from predeployed_generator.openzeppelin.proxy_admin_generator import ProxyAdminGenerator
 from ima_predeployed.generator import generate_meta
 
-from admin.utils.helper import write_json, get_schain_originator
+from admin.utils.helper import write_json, get_schain_originator, read_json
 
 logger = logging.getLogger(__name__)
 
