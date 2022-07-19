@@ -9,6 +9,6 @@ COPY ./requirements.txt /skale-explorer/requirements.txt
 WORKDIR /skale-explorer
 
 RUN pip3 install -r requirements.txt
-COPY . /skale-explorer
+COPY . /skale-explorer/statistics-collector
 ENV PYTHONPATH="/skale-explorer"
-CMD [ "python3", "admin/agent.py" ]
+CMD [ "python3", "statistics-collector/main.py" ]

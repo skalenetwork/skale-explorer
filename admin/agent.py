@@ -3,7 +3,7 @@ import os
 import subprocess
 from time import sleep
 
-from admin import EXPLORER_SCRIPT_PATH, EXPLORERS_META_DATA_PATH, EXPLORER_VERSION
+from admin import EXPLORER_SCRIPT_PATH, EXPLORERS_META_DATA_PATH, EXPLORER_VERSION, ABI_FILEPATH
 from admin.configs.meta import is_current_version, is_schain_upgraded, verified_contracts, update_meta_data
 from admin.core.containers import (get_free_port, get_db_port, restart_nginx,
                                    is_explorer_running, remove_explorer)
@@ -73,6 +73,7 @@ def run_iteration():
 
 
 def main():
+    assert os.path.isfile(ABI_FILEPATH), "ABI not found"
     if not os.path.isfile(EXPLORERS_META_DATA_PATH):
         write_json(EXPLORERS_META_DATA_PATH, {})
     while True:

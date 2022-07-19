@@ -5,7 +5,7 @@ services:
     image: "explorer-admin:${TAG:-latest}"
     restart: unless-stopped
     build:
-      context: .
+      context: admin
       dockerfile: Dockerfile
     network_mode: host
     environment:
@@ -18,7 +18,17 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./data:/skale-explorer/data
-      - ../docker:/docker
+      - ./deps:/skale-explorer/deps
+  statistics-collector:
+    container_name: statistics_collector
+    image: "statistics-collector:${TAG:-latest}"
+    restart: unless-stopped
+    build:
+      context: statistics-collector
+      dockerfile: Dockerfile
+    network_mode: host
+    volumes:
+      - ./data:/skale-explorer/data
   nginx:
     image: nginx:1.19.6
     container_name: nginx
