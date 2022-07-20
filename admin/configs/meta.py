@@ -1,7 +1,8 @@
 import logging
 from os.path import isfile
+from time import time
 
-from admin import EXPLORERS_META_DATA_PATH, EXPLORER_VERSION
+from admin import EXPLORERS_META_DATA_PATH, EXPLORER_VERSION, STATS_TIME_DELTA
 from admin.utils.helper import read_json, write_json
 
 logger = logging.getLogger(__name__)
@@ -65,4 +66,22 @@ def get_schain_meta(schain_name):
 def set_chain_verified(schain_name):
     data = read_json(EXPLORERS_META_DATA_PATH)
     data[schain_name]['contracts_ verified'] = True
+    write_json(EXPLORERS_META_DATA_PATH, data)
+
+
+def is_statistic_updated():
+    data = read_json(EXPLORERS_META_DATA_PATH)
+    last_updated = data.get('stats_last_updated')
+    if not last_updated:
+        return False
+    if time() - last_updated < STATS_TIME_DELTA:
+        return True
+    return False
+
+
+def update_statistic_ts():
+    ts = time()
+    logger.info(f'Update last statistic ts: {ts}')
+    data = read_json(EXPLORERS_META_DATA_PATH)
+    data['stats_last_updated'] = ts
     write_json(EXPLORERS_META_DATA_PATH, data)
