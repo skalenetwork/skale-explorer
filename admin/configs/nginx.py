@@ -1,10 +1,8 @@
 import os
-from admin import (NGINX_CONFIG_PATH, EXPLORERS_META_DATA_PATH, SSL_CRT_PATH,
-                   SSL_KEY_PATH)
+from admin import (NGINX_CONFIG_PATH, SSL_CRT_PATH, SSL_KEY_PATH)
 import crossplane
 
 from admin.configs.meta import get_explorers_meta
-from admin.utils.helper import read_json
 
 
 def generate_schain_nginx_config(schain_name, explorer_endpoint, ssl=False):
