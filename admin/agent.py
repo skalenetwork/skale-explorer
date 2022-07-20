@@ -5,7 +5,7 @@ from time import sleep
 
 from admin import EXPLORER_SCRIPT_PATH, EXPLORERS_META_DATA_PATH, EXPLORER_VERSION
 from admin.configs.meta import is_current_version, is_schain_upgraded, verified_contracts, update_meta_data, \
-    is_statistic_updated, update_statistic_ts
+    is_statistic_updated, update_statistic_ts, create_meta_file
 from admin.core.containers import (get_free_port, get_db_port, restart_nginx,
                                    is_explorer_running, remove_explorer)
 from admin.core.endpoints import read_json, get_all_names, get_schain_endpoint, is_dkg_passed
@@ -44,6 +44,7 @@ def run_explorer(schain_name, endpoint, ws_endpoint):
 
 
 def run_explorer_for_schain(schain_name):
+    logger.info(schain_name)
     endpoint = get_schain_endpoint(schain_name)
     ws_endpoint = get_schain_endpoint(schain_name, ws=True)
     if endpoint and ws_endpoint:
@@ -79,7 +80,7 @@ def run_iteration():
 
 def main():
     if not os.path.isfile(EXPLORERS_META_DATA_PATH):
-        write_json(EXPLORERS_META_DATA_PATH, {})
+        create_meta_file()
     while True:
         logger.info('Running new iteration...')
         run_iteration()

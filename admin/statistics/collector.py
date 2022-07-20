@@ -1,5 +1,9 @@
+import logging
+
 import psycopg2
 from admin.configs.meta import get_schain_meta
+
+logger = logging.getLogger(__name__)
 
 
 def collect_stats(schain_name):
@@ -10,7 +14,7 @@ def collect_stats(schain_name):
         user="postgres",
         port=schain_meta['db_port'])
 
-    query = '''
+    query_1 = '''
     SELECT
         count(case when (NOW()::date-inserted_at::date) < 7 THEN 1 else null end) tx_count_7_days,
         count(DISTINCT case when (NOW()::date-inserted_at::date) < 7 THEN hash else null end) unique_tx_count_7_days,
@@ -27,5 +31,5 @@ def collect_stats(schain_name):
     '''
 
     cursor = conn.cursor()
-    cursor.execute(query)
+    cursor.execute(query_1)
     return cursor.fetchall()
