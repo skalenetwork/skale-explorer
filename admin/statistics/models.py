@@ -53,7 +53,7 @@ class Stats(Base):
 class StatsDatabase:
     def __init__(self):
         self.db_path = f'sqlite:///{os.path.join(SERVER_DATA_DIR, "database.db")}'
-        self.engine = create_engine(self.db_path, echo=True, future=True)
+        self.engine = create_engine(self.db_path)
         if not database_exists(self.db_path):
             Base.metadata.create_all(self.engine)
 

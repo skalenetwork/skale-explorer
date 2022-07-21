@@ -1,8 +1,8 @@
-import json
 import logging
-from datetime import time, datetime
+from datetime import datetime
 from decimal import Decimal
 from collections import Counter
+from time import time
 
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -99,8 +99,11 @@ def collect_schain_stats(schain_name):
     raw_result = {}
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     for query in queries:
-        cursor.execute(query)
-        raw_result.update(dict(cursor.fetchall()[0]))
+        try:
+            cursor.execute(query)
+            raw_result.update(dict(cursor.fetchall()[0]))
+        except Exception:
+            continue
     raw_result.pop('tx_date')
     result = {
         key: float(raw_result[key]) if type(raw_result[key]) == Decimal else raw_result[key]
@@ -120,7 +123,7 @@ def update_schains_stats(schain_names):
     timestamp = time()
     db.add(
         schains_number=len(schain_names),
-        timestamp = datetime.fromtimestamp(timestamp),
+        inserted_at=datetime.fromtimestamp(timestamp),
         **total_stats
     )
     return timestamp

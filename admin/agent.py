@@ -5,7 +5,7 @@ from time import sleep
 
 from admin import EXPLORER_SCRIPT_PATH, EXPLORERS_META_DATA_PATH, EXPLORER_VERSION
 from admin.configs.meta import is_current_version, is_schain_upgraded, verified_contracts, update_meta_data, \
-    is_statistic_updated, update_statistic_ts, create_meta_file
+    is_statistic_updated, update_statistic_ts, create_meta_file, get_explorers_meta
 from admin.core.containers import (get_free_port, get_db_port, restart_nginx,
                                    is_explorer_running, remove_explorer)
 from admin.core.endpoints import read_json, get_all_names, get_schain_endpoint, is_dkg_passed
@@ -52,7 +52,7 @@ def run_explorer_for_schain(schain_name):
 
 
 def run_iteration():
-    explorers = read_json(EXPLORERS_META_DATA_PATH)
+    explorers = get_explorers_meta()
     schains = get_all_names()
     for schain_name in schains:
         if schain_name not in explorers and not is_dkg_passed(schain_name):
