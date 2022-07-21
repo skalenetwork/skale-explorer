@@ -87,8 +87,7 @@ def is_statistic_updated():
     return False
 
 
-def update_statistic_ts():
-    ts = time()
+def update_statistic_ts(ts):
     logger.info(f'Update last statistic ts: {ts}')
     data = read_json(EXPLORERS_META_DATA_PATH)
     data['stats_last_updated'] = ts

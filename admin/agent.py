@@ -9,8 +9,7 @@ from admin.configs.meta import is_current_version, is_schain_upgraded, verified_
 from admin.core.containers import (get_free_port, get_db_port, restart_nginx,
                                    is_explorer_running, remove_explorer)
 from admin.core.endpoints import read_json, get_all_names, get_schain_endpoint, is_dkg_passed
-from admin.statistics.collector import collect_schain_stats
-from admin.utils.helper import write_json
+from admin.statistics.collector import update_schains_stats
 from admin.utils.logger import init_logger
 from admin.migrations.revert_reasons import upgrade, set_schain_upgraded
 from admin.configs.nginx import regenerate_nginx_config
@@ -73,8 +72,8 @@ def run_iteration():
         if not verified_contracts(schain_name) and is_explorer_running(schain_name):
             verify(schain_name)
     if not is_statistic_updated():
-        collect_schain_stats(schains[0])
-        # update_statistic_ts()
+        ts = update_schains_stats(schains)
+        update_statistic_ts(ts)
 
 
 def main():
