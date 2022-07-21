@@ -1,8 +1,10 @@
+import logging
 from playhouse.shortcuts import model_to_dict
 from peewee import Model, SqliteDatabase, IntegerField, DateTimeField, FloatField, PrimaryKeyField, IntegrityError, \
     DoesNotExist
-
 from admin import DB_FILE_PATH
+
+logger = logging.getLogger(__name__)
 
 
 class BaseModel(Model):
@@ -54,10 +56,17 @@ class StatsRecord(BaseModel):
             return None, err
 
     @classmethod
-    def get_last(cls):
+    def get_last_stats(cls):
         try:
             raw_result = cls.select().order_by(cls.id.desc()).get()
             result = model_to_dict(raw_result, exclude=[cls.id])
+            result['inserted_at'] = str(result['inserted_at'])
             return result
         except DoesNotExist:
             return None
+
+
+def create_tables():
+    logger.info('Creating statsrecord table...')
+    if not StatsRecord.table_exists():
+        StatsRecord.create_table()
