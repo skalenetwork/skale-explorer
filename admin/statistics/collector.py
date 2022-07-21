@@ -8,7 +8,7 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 
 from admin.configs.meta import get_schain_meta
-from admin.statistics.models import StatsDatabase
+from admin.statistics.models import StatsRecord
 
 logger = logging.getLogger(__name__)
 
@@ -113,7 +113,6 @@ def collect_schain_stats(schain_name):
 
 
 def update_schains_stats(schain_names):
-    db = StatsDatabase()
     total_stats = {}
     for schain in schain_names:
         schain_stats = collect_schain_stats(schain)
@@ -121,7 +120,7 @@ def update_schains_stats(schain_names):
         total_stats = dict(Counter(total_stats) + Counter(schain_stats))
     logger.info(f'Schains: {len(schain_names)}; total stats: {total_stats}')
     timestamp = time()
-    db.add(
+    StatsRecord.add(
         schains_number=len(schain_names),
         inserted_at=datetime.fromtimestamp(timestamp),
         **total_stats
