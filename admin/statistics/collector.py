@@ -109,6 +109,7 @@ def collect_schain_stats(schain_name):
     result = {
         key: float(raw_result[key]) if type(raw_result[key]) == Decimal else raw_result[key]
         for key in raw_result
+        if raw_result[key] is not None
     }
     return result
 
