@@ -18,7 +18,23 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./data:/skale-explorer/data
-      - ../docker:/docker
+    command: "python3 admin/agent.py"
+  stats-api:
+    container_name: stats_api
+    image: "stats-api:${TAG:-latest}"
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      FLASK_APP: admin/statistics/app.py
+      FLASK_APP_HOST: ${FLASK_APP_HOST}
+      FLASK_APP_PORT: ${FLASK_APP_PORT}
+    volumes:
+      - ./data:/skale-explorer/data
+    ports:
+      - "3009:5000"
+    command: "python admin/statistics/app.py"
   nginx:
     image: nginx:1.19.6
     container_name: nginx

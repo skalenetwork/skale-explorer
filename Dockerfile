@@ -11,4 +11,3 @@ WORKDIR /skale-explorer
 RUN pip3 install -r requirements.txt
 COPY . /skale-explorer
 ENV PYTHONPATH="/skale-explorer"
-CMD [ "python3", "admin/agent.py" ]
