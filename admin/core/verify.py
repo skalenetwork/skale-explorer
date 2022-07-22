@@ -102,7 +102,7 @@ def check_verify_status(schain_name, uid):
                 headers=headers
             ).json()
             if response['result'] == 'Pending in queue' or response['result'] == 'Unknown UID':
-                logger.info(f'Verify status: {response["result"]}...')
+                logger.debug(f'Verify status: {response["result"]}...')
                 sleep(10)
             else:
                 if response['result'] == 'Pass - Verified':
