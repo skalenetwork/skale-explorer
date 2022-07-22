@@ -67,6 +67,6 @@ class StatsRecord(BaseModel):
 
 
 def create_tables():
-    logger.info('Creating statsrecord table...')
     if not StatsRecord.table_exists():
+        logger.info('Creating statsrecord table...')
         StatsRecord.create_table()

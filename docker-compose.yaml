@@ -33,7 +33,7 @@ services:
     volumes:
       - ./data:/skale-explorer/data
     ports:
-      - "3009:5000"
+      - "${FLASK_HOST_PORT}:${FLASK_APP_PORT}"
     command: "python admin/statistics/app.py"
   nginx:
     image: nginx:1.19.6

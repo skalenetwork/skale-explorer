@@ -7,6 +7,7 @@ set -e
 
 export FLASK_APP_HOST=0.0.0.0
 export FLASK_APP_PORT=5000
+export FLASK_HOST_PORT=3009
 
 WORKDIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]:-$0}"; )" &> /dev/null && pwd 2> /dev/null; )";
 HOST_DIR_PATH=$WORKDIR docker-compose -f $WORKDIR/docker-compose.yaml up -d --build
