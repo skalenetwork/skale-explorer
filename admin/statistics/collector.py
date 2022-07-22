@@ -59,39 +59,39 @@ def collect_schain_stats(schain_name):
     ''', '''
         SELECT MAX(cnt_per_second) max_tps_last_24_hours
         from (
-          SELECT count(1) cnt_per_second,
-            TO_CHAR(blocks.timestamp :: DATE,  'YYYY-MM-DD HH:MM:SS')
+          SELECT count(1) cnt_per_second, 
+          blocks.timestamp
           from transactions
           inner join blocks on blocks.number = transactions.block_number
           WHERE
-            NOW()::date-blocks.timestamp::date < 7
+            NOW()::date-blocks.timestamp::date < 1
           group by 
-            TO_CHAR(blocks.timestamp :: DATE,  'YYYY-MM-DD HH:MM:SS')
-        ) as foo
-    ''', '''
+            blocks.timestamp
+        ) as foo;
+    ''', ''' 
         SELECT MAX(cnt_per_second) max_tps_last_7_days
         from (
-          SELECT count(1) cnt_per_second,
-            TO_CHAR(blocks.timestamp :: DATE,  'YYYY-MM-DD HH:MM:SS')
+          SELECT count(1) cnt_per_second, 
+          blocks.timestamp
           from transactions
           inner join blocks on blocks.number = transactions.block_number
           WHERE
             NOW()::date-blocks.timestamp::date < 7
           group by 
-            TO_CHAR(blocks.timestamp :: DATE,  'YYYY-MM-DD HH:MM:SS')
-        ) as foo
+            blocks.timestamp
+        ) as foo;
     ''', '''
         SELECT MAX(cnt_per_second) max_tps_last_30_days
         from (
-          SELECT count(1) cnt_per_second,
-            TO_CHAR(blocks.timestamp :: DATE,  'YYYY-MM-DD HH:MM:SS')
+          SELECT count(1) cnt_per_second, 
+          blocks.timestamp
           from transactions
           inner join blocks on blocks.number = transactions.block_number
           WHERE
             NOW()::date-blocks.timestamp::date < 30
           group by 
-            TO_CHAR(blocks.timestamp :: DATE,  'YYYY-MM-DD HH:MM:SS')
-        ) as foo
+            blocks.timestamp
+        ) as foo;
     ''', '''
         SELECT 
             count(distinct hash) tx_count_total, 
