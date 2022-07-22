@@ -3,7 +3,7 @@ import logging
 from flask import Flask, request
 
 from admin import FLASK_APP_PORT, FLASK_APP_HOST
-from admin.statistics.models import StatsRecord
+from admin.statistics.database import StatsRecord
 from admin.utils.logger import init_logger
 from admin.utils.web import construct_ok_response
 

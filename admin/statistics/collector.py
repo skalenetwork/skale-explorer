@@ -8,7 +8,7 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 
 from admin.configs.meta import get_schain_meta
-from admin.statistics.models import StatsRecord
+from admin.statistics.database import StatsRecord
 
 logger = logging.getLogger(__name__)
 

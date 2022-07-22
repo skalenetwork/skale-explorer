@@ -10,7 +10,7 @@ from admin.core.containers import (get_free_port, get_db_port, restart_nginx,
                                    is_explorer_running, remove_explorer)
 from admin.core.endpoints import get_all_names, get_schain_endpoint, is_dkg_passed
 from admin.statistics.collector import update_schains_stats
-from admin.statistics.models import create_tables
+from admin.statistics.database import create_tables
 from admin.utils.logger import init_logger
 from admin.migrations.revert_reasons import upgrade, set_schain_upgraded
 from admin.configs.nginx import regenerate_nginx_config
