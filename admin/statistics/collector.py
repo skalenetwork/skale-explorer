@@ -104,7 +104,8 @@ def collect_schain_stats(schain_name):
             raw_result.update(dict(cursor.fetchall()[0]))
         except Exception:
             continue
-    raw_result.pop('tx_date')
+    if raw_result.get('tx_date'):
+        raw_result.pop('tx_date')
     result = {
         key: float(raw_result[key]) if type(raw_result[key]) == Decimal else raw_result[key]
         for key in raw_result
