@@ -42,6 +42,10 @@ def get_schain_config(schain_name):
     return read_json(join(SCHAIN_CONFIG_DIR_PATH, f'{schain_name}.json'))
 
 
+def write_schain_config(schain_name, config):
+    write_json(join(SCHAIN_CONFIG_DIR_PATH, f'{schain_name}.json'), config)
+
+
 def generate_config(schain_name):
     config_path = os.path.join(SCHAIN_CONFIG_DIR_PATH, f'{schain_name}.json')
     if not os.path.exists(config_path):
@@ -124,7 +128,6 @@ def fetch_predeployed_info(schain_name, contract_addresses):
 
 
 def set_contract_verified(schain_name, address):
-    path = get_schain_config(schain_name)
-    config = read_json(path)
+    config = get_schain_config(schain_name)
     config['verification_status'][address] = True
-    write_json(path, config)
+    write_schain_config(schain_name, config)
