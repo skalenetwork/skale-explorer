@@ -3,12 +3,14 @@ import os
 import subprocess
 from time import sleep
 
-from admin import EXPLORER_SCRIPT_PATH, EXPLORERS_META_DATA_PATH, EXPLORER_VERSION
-from admin.configs.meta import is_current_version, is_schain_upgraded, verified_contracts, update_meta_data
+from admin import EXPLORER_SCRIPT_PATH, EXPLORERS_META_DATA_PATH, EXPLORER_VERSION, ABI_FILEPATH
+from admin.configs.meta import is_current_version, is_schain_upgraded, verified_contracts, update_meta_data, \
+    is_statistic_updated, update_statistic_ts, create_meta_file, get_explorers_meta
 from admin.core.containers import (get_free_port, get_db_port, restart_nginx,
                                    is_explorer_running, remove_explorer)
-from admin.core.endpoints import read_json, get_all_names, get_schain_endpoint, is_dkg_passed
-from admin.utils.helper import write_json
+from admin.core.endpoints import get_all_names, get_schain_endpoint, is_dkg_passed
+from admin.statistics.collector import update_schains_stats
+from admin.statistics.database import create_tables
 from admin.utils.logger import init_logger
 from admin.migrations.revert_reasons import upgrade, set_schain_upgraded
 from admin.configs.nginx import regenerate_nginx_config
@@ -51,7 +53,7 @@ def run_explorer_for_schain(schain_name):
 
 
 def run_iteration():
-    explorers = read_json(EXPLORERS_META_DATA_PATH)
+    explorers = get_explorers_meta()
     schains = get_all_names()
     for schain_name in schains:
         if schain_name not in explorers and not is_dkg_passed(schain_name):
@@ -70,11 +72,16 @@ def run_iteration():
             run_explorer_for_schain(schain_name)
         if not verified_contracts(schain_name) and is_explorer_running(schain_name):
             verify(schain_name)
+    if not is_statistic_updated():
+        ts = update_schains_stats(schains)
+        update_statistic_ts(ts)
 
 
 def main():
+    assert os.path.isfile(ABI_FILEPATH), "ABI not found"
     if not os.path.isfile(EXPLORERS_META_DATA_PATH):
-        write_json(EXPLORERS_META_DATA_PATH, {})
+        create_meta_file()
+    create_tables()
     while True:
         logger.info('Running new iteration...')
         run_iteration()

@@ -1,9 +1,8 @@
 import os
-from admin import (NGINX_CONFIG_PATH, EXPLORERS_META_DATA_PATH, SSL_CRT_PATH,
-                   SSL_KEY_PATH)
+from admin import (NGINX_CONFIG_PATH, SSL_CRT_PATH, SSL_KEY_PATH)
 import crossplane
 
-from admin.utils.helper import read_json
+from admin.configs.meta import get_explorers_meta
 
 
 def generate_schain_nginx_config(schain_name, explorer_endpoint, ssl=False):
@@ -102,7 +101,7 @@ def generate_base_nginx_config(schain_name, explorer_endpoint):
 
 
 def regenerate_nginx_config():
-    explorers = read_json(EXPLORERS_META_DATA_PATH)
+    explorers = get_explorers_meta()
     nginx_cfg = []
     for schain_name in explorers:
         explorer_endpoint = f'http://127.0.0.1:{explorers[schain_name]["port"]}'
