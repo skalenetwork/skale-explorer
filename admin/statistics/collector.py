@@ -1,7 +1,6 @@
 import logging
 from datetime import datetime
 from decimal import Decimal
-from collections import Counter
 from time import time
 
 import psycopg2
@@ -15,6 +14,10 @@ logger = logging.getLogger(__name__)
 
 def collect_schain_stats(schain_name):
     schain_meta = get_schain_meta(schain_name)
+    if not schain_meta:
+        logger.warning(f'Explorer for {schain_name} is not created yet')
+        return {}
+
     conn = psycopg2.connect(
         host="localhost",
         database="explorer",

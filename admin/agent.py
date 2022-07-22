@@ -73,7 +73,8 @@ def run_iteration():
         if not verified_contracts(schain_name) and is_explorer_running(schain_name):
             verify(schain_name)
     if not is_statistic_updated():
-        ts = update_schains_stats(schains)
+        logger.info('Collecting statistics...')
+        ts = update_schains_stats(explorers.keys())
         update_statistic_ts(ts)
 
 
