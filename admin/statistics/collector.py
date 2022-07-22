@@ -119,7 +119,7 @@ def update_schains_stats(schain_names):
     for schain in schain_names:
         schain_stats = collect_schain_stats(schain)
         logger.info(f'Stats for {schain}: {schain_stats}')
-        total_stats = dict(Counter(total_stats) + Counter(schain_stats))
+        total_stats = update_total_dict(total_stats, schain_stats)
     logger.info(f'Schains: {len(schain_names)}; total stats: {total_stats}')
     timestamp = time()
     StatsRecord.add(
@@ -128,3 +128,13 @@ def update_schains_stats(schain_names):
         **total_stats
     )
     return timestamp
+
+
+def update_total_dict(total_stats, schain_stats):
+    for key in schain_stats:
+        if key.startswith('max'):
+            total_stats[key] = max(total_stats.get(key, 0), schain_stats[key])
+        else:
+            total_stats[key] = total_stats.get(key, 0) + schain_stats[key]
+    return total_stats
+
