@@ -30,6 +30,7 @@ services:
       FLASK_APP: admin/statistics/app.py
       FLASK_APP_HOST: ${FLASK_APP_HOST}
       FLASK_APP_PORT: ${FLASK_APP_PORT}
+      FLASK_HOST_PORT: ${FLASK_HOST_PORT}
     volumes:
       - ./data:/skale-explorer/data
     ports:

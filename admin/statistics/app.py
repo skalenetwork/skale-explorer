@@ -3,6 +3,7 @@ import logging
 from flask import Flask, request
 
 from admin import FLASK_APP_PORT, FLASK_APP_HOST
+from admin.configs.nginx import generate_stats_nginx_config
 from admin.statistics.database import StatsRecord
 from admin.utils.logger import init_logger
 from admin.utils.web import construct_ok_response
@@ -20,6 +21,8 @@ def get_stats():
 
 
 def main():
+    logger.info('Generating nginx config for stats server')
+    generate_stats_nginx_config()
     logger.info('Starting Flask server')
     app.run(port=FLASK_APP_PORT, host=FLASK_APP_HOST)
 

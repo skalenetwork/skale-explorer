@@ -1,5 +1,5 @@
 import os
-from admin import (NGINX_CONFIG_PATH, SSL_CRT_PATH, SSL_KEY_PATH)
+from admin import (NGINX_CONFIG_PATH, SSL_CRT_PATH, SSL_KEY_PATH, FLASK_HOST_PORT, STATS_NGINX_CONFIG_PATH)
 import crossplane
 
 from admin.configs.meta import get_explorers_meta
@@ -112,4 +112,69 @@ def regenerate_nginx_config():
         nginx_cfg.append(schain_config)
     formatted_config = crossplane.build(nginx_cfg)
     with open(NGINX_CONFIG_PATH, 'w') as f:
+        f.write(formatted_config)
+
+
+def generate_base_stats_nginx_config():
+    return {
+        "directive": "server",
+        "args": [],
+        "block": [
+            {
+                "directive": "listen",
+                "args": [
+                    '80'
+                ]
+            },
+            {
+                "directive": "server_name",
+                "args": [
+                    "stats.*"
+                ]
+            },
+            {
+                "directive": "location",
+                "args": [
+                    "/"
+                ],
+                "block": [
+                    {
+                        "directive": "proxy_pass",
+                        "args": [
+                            f'http://127.0.0.1:{FLASK_HOST_PORT}/stats'
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+
+
+def generate_stats_nginx_config():
+    config = generate_base_stats_nginx_config()
+    if os.path.isfile(SSL_CRT_PATH) and os.path.isfile(SSL_KEY_PATH):
+        ssl_block = [
+                {
+                    "directive": "listen",
+                    "args": [
+                        '443',
+                        'ssl'
+                    ]
+                },
+                {
+                    "directive": "ssl_certificate",
+                    "args": [
+                        '/data/server.crt'
+                    ]
+                },
+                {
+                    "directive": "ssl_certificate_key",
+                    "args": [
+                        '/data/server.key'
+                    ]
+                }
+        ]
+        config['block'] = ssl_block + config['block']
+    formatted_config = crossplane.build([config])
+    with open(STATS_NGINX_CONFIG_PATH, 'w') as f:
         f.write(formatted_config)

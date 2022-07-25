@@ -15,6 +15,7 @@ HOST_SCHAIN_CONFIG_DIR_PATH = os.path.join(HOST_DIR_PATH, 'data', 'configs') if 
 
 NGINX_CONFIG_PATH = os.path.join(SERVER_DATA_DIR, 'nginx.conf')
 NGINX_TEMP_CONFIG_PATH = os.path.join(SERVER_DATA_DIR, 'nginx.temp.conf')
+STATS_NGINX_CONFIG_PATH = os.path.join(SERVER_DATA_DIR, 'stats.conf')
 
 ENDPOINT = os.environ.get('ETH_ENDPOINT')
 PROXY_DOMAIN_NAME = os.environ.get('PROXY_DOMAIN')
@@ -35,3 +36,4 @@ ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
 STATS_TIME_DELTA = 3600
 FLASK_APP_PORT = os.environ.get('FLASK_APP_PORT')
 FLASK_APP_HOST = os.environ.get('FLASK_APP_HOST')
+FLASK_HOST_PORT = os.environ.get('FLASK_HOST_PORT')
