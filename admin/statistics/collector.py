@@ -59,8 +59,9 @@ def collect_schain_stats(schain_name):
     ''', '''
         SELECT MAX(cnt_per_second) max_tps_last_24_hours
         from (
-          SELECT count(1) cnt_per_second, 
-          blocks.timestamp
+          SELECT 
+          blocks.timestamp, 
+          count(1) / extract(epoch from (blocks.timestamp - LAG (blocks.timestamp,1) OVER (ORDER BY blocks.timestamp ASC))) AS cnt_per_second
           from transactions
           inner join blocks on blocks.number = transactions.block_number
           WHERE
@@ -71,8 +72,9 @@ def collect_schain_stats(schain_name):
     ''', ''' 
         SELECT MAX(cnt_per_second) max_tps_last_7_days
         from (
-          SELECT count(1) cnt_per_second, 
-          blocks.timestamp
+          SELECT 
+          blocks.timestamp, 
+          count(1) / extract(epoch from (blocks.timestamp - LAG (blocks.timestamp,1) OVER (ORDER BY blocks.timestamp ASC))) AS cnt_per_second
           from transactions
           inner join blocks on blocks.number = transactions.block_number
           WHERE
@@ -83,8 +85,9 @@ def collect_schain_stats(schain_name):
     ''', '''
         SELECT MAX(cnt_per_second) max_tps_last_30_days
         from (
-          SELECT count(1) cnt_per_second, 
-          blocks.timestamp
+          SELECT 
+          blocks.timestamp, 
+          count(1) / extract(epoch from (blocks.timestamp - LAG (blocks.timestamp,1) OVER (ORDER BY blocks.timestamp ASC))) AS cnt_per_second
           from transactions
           inner join blocks on blocks.number = transactions.block_number
           WHERE
