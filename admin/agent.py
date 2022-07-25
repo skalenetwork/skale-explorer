@@ -74,7 +74,7 @@ def run_iteration():
             verify(schain_name)
     if not is_statistic_updated():
         logger.info('Collecting statistics...')
-        ts = update_schains_stats(explorers.keys())
+        ts = update_schains_stats(schains)
         update_statistic_ts(ts)
 
 
