@@ -54,7 +54,8 @@ def collect_schain_stats(schain_name):
     SELECT
         count(case when (NOW()::date-timestamp::date) <= 0 THEN 1 else null end) block_count_24_hours,
         count(case when (NOW()::date-timestamp::date) < 7 THEN 1 else null end) block_count_7_days,
-        count(case when (NOW()::date-timestamp::date) < 30 THEN 1 else null end) block_count_30_days
+        count(case when (NOW()::date-timestamp::date) < 30 THEN 1 else null end) block_count_30_days,
+        count(1) block_count_total
     FROM blocks
     ''', '''
         SELECT MAX(cnt_per_second) max_tps_last_24_hours
