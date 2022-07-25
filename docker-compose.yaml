@@ -32,6 +32,7 @@ services:
       FLASK_APP_PORT: ${FLASK_APP_PORT}
       FLASK_HOST_PORT: ${FLASK_HOST_PORT}
     volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
       - ./data:/skale-explorer/data
     ports:
       - "${FLASK_HOST_PORT}:${FLASK_APP_PORT}"
