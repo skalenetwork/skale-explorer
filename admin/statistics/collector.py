@@ -7,7 +7,7 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 
 from admin.configs.meta import get_schain_meta
-from admin.statistics.database import StatsRecord
+from admin.statistics.database import StatsRecord, GroupStats
 
 logger = logging.getLogger(__name__)
 
@@ -102,6 +102,33 @@ def collect_schain_stats(schain_name):
             count(distinct from_address_hash) user_count_total
         from transactions
     ''']
+    multi_queries = {
+        'data_by_days': '''
+            SELECT
+                count(1) tx_count,
+                count(DISTINCT transactions.hash) unique_tx,
+                count(DISTINCT from_address_hash) user_count,
+                sum(DISTINCT transactions.gas_used) gas_total_used_gwei,
+                sum(DISTINCT transactions.gas_used) / 1000000000 gas_total_used_ETH,
+                blocks.timestamp :: DATE as TX_DATE
+            FROM transactions
+            inner join blocks on blocks.number = transactions.block_number
+            where NOW()::date-blocks.timestamp::date < 7
+            GROUP by blocks.timestamp :: DATE
+            ''',
+        'data_by_months': '''
+            SELECT
+                count(1) tx_count,
+                count(DISTINCT transactions.hash) unique_tx,
+                count(DISTINCT from_address_hash) user_count,
+                sum(DISTINCT transactions.gas_used) gas_total_used_gwei,
+                sum(DISTINCT transactions.gas_used) / 1000000000 gas_total_used_ETH,
+                TO_CHAR(blocks.timestamp :: DATE, 'YYYY-MM') as TX_DATE
+            FROM transactions
+            inner join blocks on blocks.number = transactions.block_number
+            GROUP by TO_CHAR(blocks.timestamp :: DATE, 'YYYY-MM')
+            '''
+    }
 
     raw_result = {}
     cursor = conn.cursor(cursor_factory=RealDictCursor)
@@ -109,8 +136,20 @@ def collect_schain_stats(schain_name):
         try:
             cursor.execute(query)
             raw_result.update(dict(cursor.fetchall()[0]))
-        except Exception:
+        except Exception as e:
+            logger.warning(f'Query failed: {e}')
             continue
+
+    raw_result_multi = []
+    for query in multi_queries:
+        try:
+            cursor.execute(multi_queries[query])
+            for data in cursor.fetchall():
+                raw_result_multi.append(dict(data))
+        except Exception as e:
+            logger.warning(f'Query failed: {e}')
+            continue
+
     if raw_result.get('tx_date'):
         raw_result.pop('tx_date')
     result = {
@@ -118,7 +157,7 @@ def collect_schain_stats(schain_name):
         for key in raw_result
         if raw_result[key] is not None
     }
-    return result
+    return result, raw_result_multi
 
 
 def update_schains_stats(schain_names):
@@ -144,4 +183,3 @@ def update_total_dict(total_stats, schain_stats):
         else:
             total_stats[key] = total_stats.get(key, 0) + schain_stats[key]
     return total_stats
-
