@@ -2,6 +2,7 @@ import logging
 import os
 import subprocess
 from time import sleep
+import psycopg2
 
 from admin import EXPLORER_SCRIPT_PATH, EXPLORERS_META_DATA_PATH, EXPLORER_VERSION, ABI_FILEPATH
 from admin.configs.meta import is_current_version, is_schain_upgraded, verified_contracts, update_meta_data, \
@@ -73,9 +74,12 @@ def run_iteration():
         if not verified_contracts(schain_name) and is_explorer_running(schain_name):
             verify(schain_name)
     if not is_statistic_updated():
-        logger.info('Collecting statistics...')
-        ts = update_schains_stats(schains)
-        update_statistic_ts(ts)
+        try:
+            logger.info('Collecting statistics...')
+            ts = update_schains_stats(schains)
+            update_statistic_ts(ts)
+        except psycopg2.OperationalError as e:
+            logger.warning(f'Collecting failed: {e}')
 
 
 def main():
