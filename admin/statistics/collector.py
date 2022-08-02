@@ -134,7 +134,7 @@ def collect_schain_stats(schain_name):
     raw_result = {}
     for query in queries:
         result = execute_query(query, **connect_creds)
-        if result['status'] == 0:
+        if result['status'] == 0 and len(result['data']):
             raw_result.update(dict(result['data'][0]))
 
     raw_result_multi = []
