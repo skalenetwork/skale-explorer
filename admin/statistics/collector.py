@@ -18,11 +18,12 @@ def collect_schain_stats(schain_name):
         logger.warning(f'Explorer for {schain_name} is not created yet')
         return {}
 
-    conn = psycopg2.connect(
-        host="localhost",
-        database="explorer",
-        user="postgres",
-        port=schain_meta['db_port'])
+    connect_creds = {
+        'host': "localhost",
+        'database': "explorer",
+        'user' : "postgres",
+        'port': schain_meta['db_port']
+    }
 
     queries = ['''
     SELECT
@@ -131,31 +132,23 @@ def collect_schain_stats(schain_name):
     }
 
     raw_result = {}
-    cursor = conn.cursor(cursor_factory=RealDictCursor)
     for query in queries:
-        try:
-            cursor.execute(query)
-            raw_result.update(dict(cursor.fetchall()[0]))
-        except Exception as e:
-            logger.warning(f'Query failed: {e}')
-            continue
+        result = execute_query(multi_queries[query])
+        if result['status'] == 0:
+            raw_result.update(dict(result['data'][0]))
 
     raw_result_multi = []
     for query in multi_queries:
-        try:
-            cursor.execute(multi_queries[query])
-            for data in cursor.fetchall():
+        result = execute_query(multi_queries[query])
+        if result['status'] == 0:
+            for data in result['data']:
                 raw_data = dict(data)
                 if query == 'data_by_days':
                     raw_data.update({'data_by_days': True})
                 else:
                     raw_data.update({'data_by_days': False})
                 raw_result_multi.append(raw_data)
-        except Exception as e:
-            logger.warning(f'Query failed: {e}')
-            continue
 
-    # print(raw_result_multi)
     if raw_result.get('tx_date'):
         raw_result.pop('tx_date')
     result = {
@@ -182,6 +175,23 @@ def update_schains_stats(schain_names):
         **total_stats
     )
     return timestamp
+
+
+def execute_query(query, **connection_creds):
+    try:
+        with psycopg2.connect(**connection_creds) as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+                cursor.execute(query)
+                return {
+                    'status': 0,
+                    'data': cursor.fetchall()
+                }
+    except Exception as e:
+        logger.warning(f'Query failed: {e}')
+        return {
+            'status': 1,
+            'data': None
+        }
 
 
 def update_total_dict(total_stats, schain_stats):
