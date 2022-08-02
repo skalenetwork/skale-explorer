@@ -133,7 +133,7 @@ def collect_schain_stats(schain_name):
 
     raw_result = {}
     for query in queries:
-        result = execute_query(multi_queries[query])
+        result = execute_query(query)
         if result['status'] == 0:
             raw_result.update(dict(result['data'][0]))
 
