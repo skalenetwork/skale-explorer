@@ -133,13 +133,13 @@ def collect_schain_stats(schain_name):
 
     raw_result = {}
     for query in queries:
-        result = execute_query(query)
+        result = execute_query(query, **connect_creds)
         if result['status'] == 0:
             raw_result.update(dict(result['data'][0]))
 
     raw_result_multi = []
     for query in multi_queries:
-        result = execute_query(multi_queries[query])
+        result = execute_query(multi_queries[query], **connect_creds)
         if result['status'] == 0:
             for data in result['data']:
                 raw_data = dict(data)
