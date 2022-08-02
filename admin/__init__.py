@@ -13,9 +13,9 @@ SCHAIN_CONFIG_DIR_PATH = os.path.join(SERVER_DATA_DIR, 'configs')
 HOST_DIR_PATH = os.environ.get('HOST_DIR_PATH')
 HOST_SCHAIN_CONFIG_DIR_PATH = os.path.join(HOST_DIR_PATH, 'data', 'configs') if HOST_DIR_PATH else None
 
-NGINX_CONFIG_PATH = os.path.join(SERVER_DATA_DIR, 'nginx.conf')
-NGINX_TEMP_CONFIG_PATH = os.path.join(SERVER_DATA_DIR, 'nginx.temp.conf')
-STATS_NGINX_CONFIG_PATH = os.path.join(SERVER_DATA_DIR, 'stats.conf')
+NGINX_CONFIGS_DIR = os.path.join(SERVER_DATA_DIR, 'nginx')
+EXPLORERS_NGINX_CONFIG_PATH = os.path.join(NGINX_CONFIGS_DIR, 'nginx.conf')
+STATS_NGINX_CONFIG_PATH = os.path.join(NGINX_CONFIGS_DIR, 'stats.conf')
 
 ENDPOINT = os.environ.get('ETH_ENDPOINT')
 PROXY_DOMAIN_NAME = os.environ.get('PROXY_DOMAIN')

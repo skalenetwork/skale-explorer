@@ -43,6 +43,5 @@ services:
     network_mode: host
     restart: unless-stopped
     volumes:
-      - ./data/nginx.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./data/stats.conf:/etc/nginx/conf.d/stats.conf:ro
+      - ./data/nginx/:/etc/nginx/conf.d/:ro
       - ./data/certs:/data/

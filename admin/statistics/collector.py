@@ -203,11 +203,11 @@ def update_total_dict(total_stats, schain_stats):
                 total_stats[key] = []
             for sample in schain_stats[key]:
                 is_find = False
-                for i in total_stats[key]:
-                    if i['tx_date'] == sample['tx_date']:
-                        for k in sample:
-                            if k != 'tx_date' and k != 'data_by_days':
-                                i[k] += sample[k]
+                for sample_total in total_stats[key]:
+                    if sample_total['tx_date'] == sample['tx_date']:
+                        for metric in sample:
+                            if metric != 'tx_date' and metric != 'data_by_days':
+                                sample_total[metric] += sample[metric]
                         is_find = True
                         break
                 if not is_find:
