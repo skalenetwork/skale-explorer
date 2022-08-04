@@ -111,22 +111,26 @@ def collect_schain_stats(schain_name):
                 count(DISTINCT from_address_hash) user_count,
                 sum(DISTINCT transactions.gas_used) gas_total_used_gwei,
                 sum(DISTINCT transactions.gas_used) / 1000000000 gas_total_used_ETH,
+                sum(DISTINCT transactions.gas_used) / 1000000000 * (market_history.opening_price + market_history.closing_price) / 2 gas_total_used_USD,
                 TO_CHAR(blocks.timestamp :: DATE, 'YYYY-MM-DD') as TX_DATE
             FROM transactions
             inner join blocks on blocks.number = transactions.block_number
+            left outer join market_history on market_history.date::date = blocks.timestamp::date
             where NOW()::date-blocks.timestamp::date < 7
-            GROUP by TO_CHAR(blocks.timestamp :: DATE, 'YYYY-MM-DD')
+            GROUP by TO_CHAR(blocks.timestamp :: DATE, 'YYYY-MM-DD'), market_history.opening_price, market_history.closing_price
             ''',
         'data_by_months': '''
             SELECT
                 count(1) tx_count,
                 count(DISTINCT transactions.hash) unique_tx,
                 count(DISTINCT from_address_hash) user_count,
-                sum(DISTINCT transactions.gas_used) gas_total_used_gwei,
-                sum(DISTINCT transactions.gas_used) / 1000000000 gas_total_used_ETH,
+                sum( transactions.gas_used) gas_total_used_gwei,
+                sum( transactions.gas_used) / 1000000000 gas_total_used_ETH,
+                sum( transactions.gas_used / 1000000000 * (market_history.opening_price + market_history.closing_price) / 2) gas_total_used_USD,
                 TO_CHAR(blocks.timestamp :: DATE, 'YYYY-MM') as TX_DATE
-            FROM transactions
-            inner join blocks on blocks.number = transactions.block_number
+            FROM blocks
+            inner join transactions on blocks.number = transactions.block_number
+            left outer join market_history on market_history.date::date = blocks.timestamp::date
             GROUP by TO_CHAR(blocks.timestamp :: DATE, 'YYYY-MM')
             '''
     }

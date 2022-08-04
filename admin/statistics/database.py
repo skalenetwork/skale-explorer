@@ -93,6 +93,7 @@ class GroupStats(BaseModel):
     user_count = IntegerField(default=0)
     gas_total_used_gwei = FloatField(default=0)
     gas_total_used_eth = FloatField(default=0)
+    gas_total_used_usd = FloatField(default=0)
 
     tx_date = DateField()
     data_by_days = BooleanField()
