@@ -7,6 +7,7 @@ from psycopg2.extras import execute_values
 
 from admin import GAS_PRICES_FILEPATH
 from admin.configs.meta import get_schain_meta
+from admin.utils.helper import read_json
 
 logger = logging.getLogger(__name__)
 
@@ -37,11 +38,10 @@ def upgrade_gas_prices(schain_name):
     cursor.execute(select_max_date)
     max_previous_date = cursor.fetchone()[0]
     results = []
-    with open(GAS_PRICES_FILEPATH) as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            if datetime.strptime(row['Date(UTC)'], '%m/%d/%Y').date() > max_previous_date:
-                results.append((row['Date(UTC)'], row['Value (Wei)']))
+    data = read_json(GAS_PRICES_FILEPATH)
+    for row in data:
+        if datetime.strptime(row['UTCDate'], '%Y-%m-%d').date() > max_previous_date:
+            results.append((row['UTCDate'], row['avgGasPrice_Wei']))
 
     insert_query = '''
             INSERT into gas_prices (date, gas_price) VALUES %s

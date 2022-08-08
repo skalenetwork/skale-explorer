@@ -16,6 +16,7 @@ def create_meta_file():
     }
     write_json(EXPLORERS_META_DATA_PATH, empty_data)
 
+
 def is_schain_upgraded(schain_name):
     schain_meta = get_schain_meta(schain_name)
     if not schain_meta or schain_meta.get('updated'):
@@ -108,8 +109,14 @@ def is_gas_prices_updated():
     return True
 
 
-def update_gas_prices_time(ts):
-    logger.info(f'Update last gas_price date: {ts}')
+def update_gas_prices_time(date):
+    logger.info(f'Update last gas_price date: {date}')
     data = read_json(EXPLORERS_META_DATA_PATH)
-    data['gas_price_last_updated'] = str(datetime.utcfromtimestamp(ts).date())
+    data['gas_price_last_updated'] = date
     write_json(EXPLORERS_META_DATA_PATH, data)
+
+
+def get_gas_prices_update_time():
+    data = read_json(EXPLORERS_META_DATA_PATH)
+    last_updated = data.get('gas_price_last_updated')
+    return last_updated

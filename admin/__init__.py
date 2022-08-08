@@ -19,6 +19,7 @@ EXPLORERS_NGINX_CONFIG_PATH = os.path.join(NGINX_CONFIGS_DIR, 'nginx.conf')
 STATS_NGINX_CONFIG_PATH = os.path.join(NGINX_CONFIGS_DIR, 'stats.conf')
 
 ENDPOINT = os.environ.get('ETH_ENDPOINT')
+ETH_API_KEY = os.environ.get('ETH_API_KEY')
 PROXY_DOMAIN_NAME = os.environ.get('PROXY_DOMAIN')
 EXPLORER_VERSION = os.environ.get('VERSION', 'latest')
 
