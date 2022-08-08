@@ -13,3 +13,4 @@ config-controller-predeployed==1.0.1.dev0
 multisigwallet-predeployed==1.1.0a0
 predeployed-generator==1.1.0a1
 context-predeployed==1.0.0.dev1
+requests==2.28.1
