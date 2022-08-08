@@ -1,17 +1,21 @@
 import logging
 import os
 import subprocess
+import time
 from time import sleep
 import psycopg2
 
 from admin import EXPLORER_SCRIPT_PATH, EXPLORERS_META_DATA_PATH, EXPLORER_VERSION, ABI_FILEPATH
 from admin.configs.meta import is_current_version, is_schain_upgraded, verified_contracts, update_meta_data, \
-    is_statistic_updated, update_statistic_ts, create_meta_file, get_explorers_meta
+    is_statistic_updated, update_statistic_ts, create_meta_file, get_explorers_meta, is_gas_prices_updated, \
+    update_gas_prices_time
 from admin.core.containers import (get_free_port, get_db_port, restart_nginx,
                                    is_explorer_running, remove_explorer)
 from admin.core.endpoints import get_all_names, get_schain_endpoint, is_dkg_passed
+from admin.migrations.gas_prices import update_schains_gas_prices
 from admin.statistics.collector import update_schains_stats
 from admin.statistics.database import create_tables
+from admin.statistics.utils import download_gas_prices
 from admin.utils.logger import init_logger
 from admin.migrations.revert_reasons import upgrade, set_schain_upgraded
 from admin.configs.nginx import regenerate_nginx_config
@@ -73,6 +77,13 @@ def run_iteration():
             run_explorer_for_schain(schain_name)
         if not verified_contracts(schain_name) and is_explorer_running(schain_name):
             verify(schain_name)
+    if not is_gas_prices_updated():
+        logger.info('Updating mainnet gas_prices for sChains...')
+        download_gas_prices()
+        ts = time.time()
+        status = update_schains_gas_prices(schains)
+        if status:
+            update_gas_prices_time(ts)
     if not is_statistic_updated():
         try:
             logger.info('Collecting statistics...')

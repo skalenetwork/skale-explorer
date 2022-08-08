@@ -1,4 +1,6 @@
+
 import logging
+from datetime import datetime
 from os.path import isfile
 from time import time
 
@@ -91,4 +93,23 @@ def update_statistic_ts(ts):
     logger.info(f'Update last statistic ts: {ts}')
     data = read_json(EXPLORERS_META_DATA_PATH)
     data['stats_last_updated'] = ts
+    write_json(EXPLORERS_META_DATA_PATH, data)
+
+
+def is_gas_prices_updated():
+    data = read_json(EXPLORERS_META_DATA_PATH)
+    last_updated = data.get('gas_price_last_updated')
+    if not last_updated:
+        return False
+    current_date = datetime.today().date()
+    last_updated_date = datetime.strptime(last_updated, '%Y-%m-%d').date()
+    if last_updated_date < current_date:
+        return False
+    return True
+
+
+def update_gas_prices_time(ts):
+    logger.info(f'Update last gas_price date: {ts}')
+    data = read_json(EXPLORERS_META_DATA_PATH)
+    data['gas_price_last_updated'] = str(datetime.utcfromtimestamp(ts).date())
     write_json(EXPLORERS_META_DATA_PATH, data)

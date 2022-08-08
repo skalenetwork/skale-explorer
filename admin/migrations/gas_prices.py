@@ -50,9 +50,13 @@ def upgrade_gas_prices(schain_name):
     conn.commit()
 
 
-def upgrade(schain_name):
-    try:
-        upgrade_gas_prices(schain_name)
-        logger.info(f'sChain {schain_name} upgraded')
-    except Exception as e:
-        print(f'Failed to upgrade {schain_name}: {e}')
+def update_schains_gas_prices(schains_list):
+    is_all_updated = True
+    for schain in schains_list:
+        try:
+            upgrade_gas_prices(schain)
+            logger.info(f'sChain {schain} upgraded')
+        except Exception as e:
+            print(f'Failed to upgrade {schain} gas_prices: {e}')
+            is_all_updated = False
+    return is_all_updated
