@@ -81,9 +81,7 @@ def run_iteration():
     if not is_gas_prices_updated():
         logger.info('Updating mainnet gas_prices for sChains...')
         current_date = str(datetime.today().date())
-        start_date = get_gas_prices_update_time()
-        download_gas_prices(end_date=current_date,
-                            start_date=start_date)
+        download_gas_prices(end_date=current_date)
         status = update_schains_gas_prices(schains)
         if status:
             update_gas_prices_time(current_date)
