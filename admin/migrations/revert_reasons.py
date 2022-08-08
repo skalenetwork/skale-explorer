@@ -55,4 +55,4 @@ def upgrade(schain_name):
         set_schain_upgraded(schain_name)
         logger.info(f'sChain {schain_name} upgraded')
     except Exception as e:
-        print(f'Failed to upgrade {schain_name}: {e}')
+        logger.warning(f'Failed to upgrade {schain_name}: {e}')

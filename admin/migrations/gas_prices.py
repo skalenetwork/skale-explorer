@@ -40,7 +40,8 @@ def upgrade_gas_prices(schain_name):
     results = []
     data = read_json(GAS_PRICES_FILEPATH)
     for row in data:
-        if datetime.strptime(row['UTCDate'], '%Y-%m-%d').date() > max_previous_date:
+        if not max_previous_date or \
+                datetime.strptime(row['UTCDate'], '%Y-%m-%d').date() > max_previous_date:
             results.append((row['UTCDate'], row['avgGasPrice_Wei']))
 
     insert_query = '''
@@ -57,6 +58,6 @@ def update_schains_gas_prices(schains_list):
             upgrade_gas_prices(schain)
             logger.info(f'sChain {schain} upgraded')
         except Exception as e:
-            print(f'Failed to upgrade {schain} gas_prices: {e}')
+            logger.warning(f'Failed to upgrade {schain} gas_prices: {e}')
             is_all_updated = False
     return is_all_updated
