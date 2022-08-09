@@ -223,39 +223,3 @@ def update_total_dict(total_stats, schain_stats):
         else:
             total_stats[key] = total_stats.get(key, 0) + schain_stats[key]
     return total_stats
-
-
-"""
-SELECT
-    count(1) tx_count,
-    count(DISTINCT transactions.hash) unique_tx,
-    count(DISTINCT from_address_hash) user_count,
-    sum(DISTINCT transactions.gas_used) gas_total_used,
-    sum(DISTINCT transactions.gas_used * gas_prices.gas_price) / 1000000000 gas_fees_total_gwei,
-    sum(DISTINCT transactions.gas_used) * gas_prices.gas_price / 1000000000000000000 gas_fees_total_eth,
-    sum(DISTINCT transactions.gas_used) * gas_prices.gas_price * (market_history.opening_price + market_history.closing_price) / 2000000000000000000 gas_fees_total_USD,
-    TO_CHAR(blocks.timestamp :: DATE, 'YYYY-MM') as TX_DATE
-FROM blocks
-inner join transactions on blocks.number = transactions.block_number
-left outer join market_history on market_history.date::date = blocks.timestamp::date
-left outer join gas_prices on gas_prices.date::date = blocks.timestamp::date
-GROUP by TO_CHAR(blocks.timestamp :: DATE, 'YYYY-MM'), gas_prices.gas_price, market_history.opening_price, market_history.closing_price;
-"""
-"""
-SELECT
-    sum(DISTINCT transactions.gas_used) gas_total_used,
-    sum(DISTINCT transactions.gas_used * gas_prices.gas_price) / 1000000000 gas_fees_total_gwei,
-    sum(DISTINCT transactions.gas_used * gas_prices.gas_price * (market_history.opening_price + market_history.closing_price)) / 2000000000000000000 gas_fees_total_USD,
-    TO_CHAR(blocks.timestamp :: DATE, 'YYYY-MM') as TX_DATE
-FROM blocks
-inner join transactions on blocks.number = transactions.block_number
-left outer join market_history on market_history.date::date = blocks.timestamp::date
-left outer join gas_prices on gas_prices.date::date = blocks.timestamp::date
-GROUP by TO_CHAR(blocks.timestamp :: DATE, 'YYYY-MM');
-"""
-"""
-SELECT 
-         hash user_count_24_hours    FROM transactions
-    inner join blocks on blocks.number = transactions.block_number
-    where NOW()::date-blocks.timestamp::date < 2
-"""
