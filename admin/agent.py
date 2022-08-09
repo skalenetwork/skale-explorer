@@ -1,7 +1,6 @@
 import logging
 import os
 import subprocess
-import time
 from datetime import datetime
 from time import sleep
 import psycopg2
@@ -9,7 +8,7 @@ import psycopg2
 from admin import EXPLORER_SCRIPT_PATH, EXPLORERS_META_DATA_PATH, EXPLORER_VERSION, ABI_FILEPATH
 from admin.configs.meta import is_current_version, is_schain_upgraded, verified_contracts, update_meta_data, \
     is_statistic_updated, update_statistic_ts, create_meta_file, get_explorers_meta, is_gas_prices_updated, \
-    update_gas_prices_time, get_gas_prices_update_time
+    update_gas_prices_time
 from admin.core.containers import (get_free_port, get_db_port, restart_nginx,
                                    is_explorer_running, remove_explorer)
 from admin.core.endpoints import get_all_names, get_schain_endpoint, is_dkg_passed
