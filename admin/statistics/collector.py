@@ -48,22 +48,6 @@ def collect_schain_stats(schain_name):
     left outer join gas_prices on gas_prices.date::date = blocks.timestamp::date
     left outer join market_history on market_history.date::date = blocks.timestamp::date;
     ''', '''
-    SELECT 
-        count(1) tx_count_24_hours,
-        count(DISTINCT transactions.hash) unique_tx_24_hours,
-        count(DISTINCT from_address_hash) user_count_24_hours, 
-        sum(transactions.gas_used) gas_total_used_24_hours,
-        sum(transactions.gas_used * gas_prices.gas_price) / power(10, 9) gas_fees_total_24_hours_gwei,
-        sum(transactions.gas_used * gas_prices.gas_price) / power(10, 18) gas_fees_total_24_hours_eth,
-        sum(transactions.gas_used * gas_prices.gas_price * (market_history.opening_price + market_history.closing_price) / 2) / power(10, 18) gas_fees_total_24_hours_usd,
-        TO_CHAR(blocks.timestamp :: DATE, 'yyyymmdd') as TX_DATE
-    FROM transactions
-    inner join blocks on blocks.number = transactions.block_number
-    left outer join gas_prices on gas_prices.date::date = blocks.timestamp::date
-    left outer join market_history on market_history.date::date = blocks.timestamp::date
-    where NOW()::date-blocks.timestamp::date < 1
-    GROUP by TO_CHAR(blocks.timestamp :: DATE, 'yyyymmdd')
-    ''', '''
     SELECT
         count(case when (NOW()::date-timestamp::date) <= 0 THEN 1 else null end) block_count_24_hours,
         count(case when (NOW()::date-timestamp::date) < 7 THEN 1 else null end) block_count_7_days,
@@ -118,7 +102,7 @@ def collect_schain_stats(schain_name):
                 sum(transactions.gas_used) gas_total_used,
                 sum(transactions.gas_used * gas_prices.gas_price) / power(10, 9) gas_fees_total_gwei,
                 sum(transactions.gas_used * gas_prices.gas_price) / power(10, 18) gas_fees_total_eth,
-                sum(transactions.gas_used * gas_prices.gas_price * (market_history.opening_price + market_history.closing_price)) / (2 * power(10, 18)) gas_fees_total_USD,
+                sum(transactions.gas_used * gas_prices.gas_price * (market_history.opening_price + market_history.closing_price)) / (2 * power(10, 18)) gas_fees_total_usd,
                 TO_CHAR(blocks.timestamp :: DATE, 'YYYY-MM-DD') as TX_DATE
             FROM transactions
             inner join blocks on blocks.number = transactions.block_number
@@ -134,7 +118,7 @@ def collect_schain_stats(schain_name):
                 count(DISTINCT from_address_hash) user_count,
                 sum(transactions.gas_used) gas_total_used,
                 sum(transactions.gas_used * gas_prices.gas_price) / power(10, 9) gas_fees_total_gwei,
-                sum(transactions.gas_used * gas_prices.gas_price * (market_history.opening_price + market_history.closing_price)) / (2 * power(10, 18)) gas_fees_total_USD,
+                sum(transactions.gas_used * gas_prices.gas_price * (market_history.opening_price + market_history.closing_price)) / (2 * power(10, 18)) gas_fees_total_usd,
                 TO_CHAR(blocks.timestamp :: DATE, 'YYYY-MM') as TX_DATE
             FROM blocks
             inner join transactions on blocks.number = transactions.block_number
