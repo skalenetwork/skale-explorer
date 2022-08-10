@@ -216,18 +216,3 @@ def update_total_dict(total_stats, schain_stats):
         else:
             total_stats[key] = total_stats.get(key, 0) + schain_stats[key]
     return total_stats
-
-
-
-"""
-SELECT
-    sum(transactions.gas_used) gas_total_used,
-    sum(transactions.gas_used * case when gas_prices.gas_price is not null THEN gas_prices.gas_price else (select gas_price from gas_prices order by date desc limit 1) end) / power(10, 9) gas_fees_total_gwei,
-    sum(transactions.gas_used * case when gas_prices.gas_price is not null THEN gas_prices.gas_price else (select gas_price from gas_prices order by date desc limit 1) end) / power(10, 18) gas_fees_total_eth,
-    sum(transactions.gas_used * case when gas_prices.gas_price is not null THEN gas_prices.gas_price else (select gas_price from gas_prices order by date desc limit 1) end * (market_history.opening_price + market_history.closing_price) / 2) / power(10, 18) gas_fees_total_usd
-FROM transactions
-inner join blocks on blocks.number = transactions.block_number
-left outer join gas_prices on gas_prices.date::date = blocks.timestamp::date
-left outer join market_history on market_history.date::date = blocks.timestamp::date;
-"""
-
