@@ -31,17 +31,17 @@ def collect_schain_stats(schain_name):
         count(DISTINCT case when (NOW()::date-blocks.timestamp::date) < 7 THEN transactions.hash else null end) unique_tx_count_7_days,
         count(DISTINCT case when (NOW()::date-blocks.timestamp::date) < 7 THEN from_address_hash else null end) user_count_7_days,
         sum(case when (NOW()::date-blocks.timestamp::date) < 7 THEN transactions.gas_used else 0 end) gas_total_used_7_days,
-        sum(case when (NOW()::date-blocks.timestamp::date) < 7 THEN transactions.gas_used else 0 end * gas_prices.gas_price) / power(10, 9) gas_fees_total_7_days_gwei,
-        sum(case when (NOW()::date-blocks.timestamp::date) < 7 THEN transactions.gas_used else 0 end * gas_prices.gas_price) / power(10, 18) gas_fees_total_7_days_eth,
-        sum(case when (NOW()::date-blocks.timestamp::date) < 7 THEN transactions.gas_used else 0 end * gas_prices.gas_price * (market_history.opening_price + market_history.closing_price) / 2) / power(10, 18) gas_fees_total_7_days_usd,
+        sum(case when (NOW()::date-blocks.timestamp::date) < 7 THEN transactions.gas_used else 0 end * case when gas_prices.gas_price is not null THEN gas_prices.gas_price else (select gas_price from gas_prices order by date desc limit 1) end) / power(10, 9) gas_fees_total_7_days_gwei,
+        sum(case when (NOW()::date-blocks.timestamp::date) < 7 THEN transactions.gas_used else 0 end * case when gas_prices.gas_price is not null THEN gas_prices.gas_price else (select gas_price from gas_prices order by date desc limit 1) end) / power(10, 18) gas_fees_total_7_days_eth,
+        sum(case when (NOW()::date-blocks.timestamp::date) < 7 THEN transactions.gas_used else 0 end * case when gas_prices.gas_price is not null THEN gas_prices.gas_price else (select gas_price from gas_prices order by date desc limit 1) end * (market_history.opening_price + market_history.closing_price) / 2) / power(10, 18) gas_fees_total_7_days_usd,
         
         count(case when (NOW()::date-blocks.timestamp::date) < 30 THEN 1 else null end) tx_count_30_days,
         count(DISTINCT case when (NOW()::date-blocks.timestamp::date) < 30 THEN transactions.hash else null end) unique_tx_count_30_days,
         count(DISTINCT case when (NOW()::date-blocks.timestamp::date) < 30 THEN from_address_hash else null end) user_count_30_days,
         sum(case when (NOW()::date-blocks.timestamp::date) < 30 THEN transactions.gas_used else 0 end) gas_total_used_30_days,
-        sum(case when (NOW()::date-blocks.timestamp::date) < 30 THEN transactions.gas_used else 0 end * gas_prices.gas_price) / power(10, 9) gas_fees_total_30_days_gwei,
-        sum(case when (NOW()::date-blocks.timestamp::date) < 30 THEN transactions.gas_used else 0 end * gas_prices.gas_price) / power(10, 18) gas_fees_total_30_days_eth,
-        sum(case when (NOW()::date-blocks.timestamp::date) < 30 THEN transactions.gas_used else 0 end * gas_prices.gas_price * (market_history.opening_price + market_history.closing_price) / 2) / power(10, 18) gas_fees_total_30_days_usd
+        sum(case when (NOW()::date-blocks.timestamp::date) < 30 THEN transactions.gas_used else 0 end * case when gas_prices.gas_price is not null THEN gas_prices.gas_price else (select gas_price from gas_prices order by date desc limit 1) end) / power(10, 9) gas_fees_total_30_days_gwei,
+        sum(case when (NOW()::date-blocks.timestamp::date) < 30 THEN transactions.gas_used else 0 end * case when gas_prices.gas_price is not null THEN gas_prices.gas_price else (select gas_price from gas_prices order by date desc limit 1) end) / power(10, 18) gas_fees_total_30_days_eth,
+        sum(case when (NOW()::date-blocks.timestamp::date) < 30 THEN transactions.gas_used else 0 end * case when gas_prices.gas_price is not null THEN gas_prices.gas_price else (select gas_price from gas_prices order by date desc limit 1) end * (market_history.opening_price + market_history.closing_price) / 2) / power(10, 18) gas_fees_total_30_days_usd
     
     FROM transactions
     inner join blocks on blocks.number = transactions.block_number
@@ -100,9 +100,9 @@ def collect_schain_stats(schain_name):
                 count(DISTINCT transactions.hash) unique_tx,
                 count(DISTINCT from_address_hash) user_count,
                 sum(transactions.gas_used) gas_total_used,
-                sum(transactions.gas_used * gas_prices.gas_price) / power(10, 9) gas_fees_total_gwei,
-                sum(transactions.gas_used * gas_prices.gas_price) / power(10, 18) gas_fees_total_eth,
-                sum(transactions.gas_used * gas_prices.gas_price * (market_history.opening_price + market_history.closing_price)) / (2 * power(10, 18)) gas_fees_total_usd,
+                sum(transactions.gas_used * case when gas_prices.gas_price is not null THEN gas_prices.gas_price else (select gas_price from gas_prices order by date desc limit 1) end) / power(10, 9) gas_fees_total_gwei,
+                sum(transactions.gas_used * case when gas_prices.gas_price is not null THEN gas_prices.gas_price else (select gas_price from gas_prices order by date desc limit 1) end) / power(10, 18) gas_fees_total_eth,
+                sum(transactions.gas_used * case when gas_prices.gas_price is not null THEN gas_prices.gas_price else (select gas_price from gas_prices order by date desc limit 1) end * (market_history.opening_price + market_history.closing_price)) / (2 * power(10, 18)) gas_fees_total_usd,
                 TO_CHAR(blocks.timestamp :: DATE, 'YYYY-MM-DD') as TX_DATE
             FROM transactions
             inner join blocks on blocks.number = transactions.block_number
@@ -117,8 +117,8 @@ def collect_schain_stats(schain_name):
                 count(DISTINCT transactions.hash) unique_tx,
                 count(DISTINCT from_address_hash) user_count,
                 sum(transactions.gas_used) gas_total_used,
-                sum(transactions.gas_used * gas_prices.gas_price) / power(10, 9) gas_fees_total_gwei,
-                sum(transactions.gas_used * gas_prices.gas_price * (market_history.opening_price + market_history.closing_price)) / (2 * power(10, 18)) gas_fees_total_usd,
+                sum(transactions.gas_used * case when gas_prices.gas_price is not null THEN gas_prices.gas_price else (select gas_price from gas_prices order by date desc limit 1) end) / power(10, 9) gas_fees_total_gwei,
+                sum(transactions.gas_used * case when gas_prices.gas_price is not null THEN gas_prices.gas_price else (select gas_price from gas_prices order by date desc limit 1) end * (market_history.opening_price + market_history.closing_price)) / (2 * power(10, 18)) gas_fees_total_usd,
                 TO_CHAR(blocks.timestamp :: DATE, 'YYYY-MM') as TX_DATE
             FROM blocks
             inner join transactions on blocks.number = transactions.block_number
