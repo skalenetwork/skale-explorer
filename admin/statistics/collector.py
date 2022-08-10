@@ -118,6 +118,7 @@ def collect_schain_stats(schain_name):
                 count(DISTINCT from_address_hash) user_count,
                 sum(transactions.gas_used) gas_total_used,
                 sum(transactions.gas_used * case when gas_prices.gas_price is not null THEN gas_prices.gas_price else (select gas_price from gas_prices order by date desc limit 1) end) / power(10, 9) gas_fees_total_gwei,
+                sum(transactions.gas_used * case when gas_prices.gas_price is not null THEN gas_prices.gas_price else (select gas_price from gas_prices order by date desc limit 1) end) / power(10, 18) gas_fees_total_eth,
                 sum(transactions.gas_used * case when gas_prices.gas_price is not null THEN gas_prices.gas_price else (select gas_price from gas_prices order by date desc limit 1) end * (market_history.opening_price + market_history.closing_price)) / (2 * power(10, 18)) gas_fees_total_usd,
                 TO_CHAR(blocks.timestamp :: DATE, 'YYYY-MM') as TX_DATE
             FROM blocks
