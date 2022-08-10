@@ -228,28 +228,3 @@ def update_total_dict(total_stats, schain_stats):
         else:
             total_stats[key] = total_stats.get(key, 0) + schain_stats[key]
     return total_stats
-
-
-"""
-SELECT
-    count(case when (NOW()::date-blocks.timestamp::date) < 7 THEN 1 else null end) tx_count_7_days,
-    count(DISTINCT case when (NOW()::date-blocks.timestamp::date) < 7 THEN transactions.hash else null end) unique_tx_count_7_days,
-    count(DISTINCT case when (NOW()::date-blocks.timestamp::date) < 7 THEN from_address_hash else null end) user_count_7_days,
-    sum(DISTINCT case when (NOW()::date-blocks.timestamp::date) < 7 THEN transactions.gas_used else 0 end) gas_total_used_7_days,
-    sum(DISTINCT case when (NOW()::date-blocks.timestamp::date) < 7 THEN transactions.gas_used else 0 end * gas_prices.gas_price) / power(10, 9) gas_fees_total_7_days_gwei,
-    sum(DISTINCT case when (NOW()::date-blocks.timestamp::date) < 7 THEN transactions.gas_used else 0 end * gas_prices.gas_price) / power(10, 18) gas_fees_total_7_days_eth,
-    sum(DISTINCT case when (NOW()::date-blocks.timestamp::date) < 7 THEN transactions.gas_used else 0 end * gas_prices.gas_price * (market_history.opening_price + market_history.closing_price) / 2) / power(10, 18) gas_fees_total_7_days_usd,
-    
-    count(case when (NOW()::date-blocks.timestamp::date) < 30 THEN 1 else null end) tx_count_30_days,
-    count(DISTINCT case when (NOW()::date-blocks.timestamp::date) < 30 THEN transactions.hash else null end) unique_tx_count_30_days,
-    count(DISTINCT case when (NOW()::date-blocks.timestamp::date) < 30 THEN from_address_hash else null end) user_count_30_days,
-    sum(DISTINCT case when (NOW()::date-blocks.timestamp::date) < 30 THEN transactions.gas_used else 0 end) gas_total_used_30_days,
-    sum(DISTINCT case when (NOW()::date-blocks.timestamp::date) < 30 THEN transactions.gas_used else 0 end * gas_prices.gas_price) / power(10, 9) gas_fees_total_30_days_gwei,
-    sum(DISTINCT case when (NOW()::date-blocks.timestamp::date) < 30 THEN transactions.gas_used else 0 end * gas_prices.gas_price) / power(10, 18) gas_fees_total_30_days_eth,
-    sum(DISTINCT case when (NOW()::date-blocks.timestamp::date) < 30 THEN transactions.gas_used else 0 end * gas_prices.gas_price * (market_history.opening_price + market_history.closing_price) / 2) / power(10, 18) gas_fees_total_30_days_usd
-
-FROM transactions
-inner join blocks on blocks.number = transactions.block_number
-left outer join gas_prices on gas_prices.date::date = blocks.timestamp::date
-left outer join market_history on market_history.date::date = blocks.timestamp::date;
-"""
