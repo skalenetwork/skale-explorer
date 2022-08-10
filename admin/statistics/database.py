@@ -22,6 +22,7 @@ class StatsRecord(BaseModel):
     tx_count_total = IntegerField(default=0)
     user_count_total = IntegerField(default=0)
     block_count_total = IntegerField(default=0)
+    unique_tx_count_total = IntegerField(default=0)
 
     tx_count_7_days = IntegerField(default=0)
     unique_tx_count_7_days = IntegerField(default=0)

@@ -41,8 +41,16 @@ def collect_schain_stats(schain_name):
         sum(case when (NOW()::date-blocks.timestamp::date) < 30 THEN transactions.gas_used else 0 end) gas_total_used_30_days,
         sum(case when (NOW()::date-blocks.timestamp::date) < 30 THEN transactions.gas_used else 0 end * case when gas_prices.gas_price is not null THEN gas_prices.gas_price else (select gas_price from gas_prices order by date desc limit 1) end) / power(10, 9) gas_fees_total_30_days_gwei,
         sum(case when (NOW()::date-blocks.timestamp::date) < 30 THEN transactions.gas_used else 0 end * case when gas_prices.gas_price is not null THEN gas_prices.gas_price else (select gas_price from gas_prices order by date desc limit 1) end) / power(10, 18) gas_fees_total_30_days_eth,
-        sum(case when (NOW()::date-blocks.timestamp::date) < 30 THEN transactions.gas_used else 0 end * case when gas_prices.gas_price is not null THEN gas_prices.gas_price else (select gas_price from gas_prices order by date desc limit 1) end * (market_history.opening_price + market_history.closing_price) / 2) / power(10, 18) gas_fees_total_30_days_usd
-    
+        sum(case when (NOW()::date-blocks.timestamp::date) < 30 THEN transactions.gas_used else 0 end * case when gas_prices.gas_price is not null THEN gas_prices.gas_price else (select gas_price from gas_prices order by date desc limit 1) end * (market_history.opening_price + market_history.closing_price) / 2) / power(10, 18) gas_fees_total_30_days_usd,
+        
+        count(1) tx_count_total,
+        count(DISTINCT transactions.hash) unique_tx_count_total,
+        count(DISTINCT from_address_hash) user_count_total,
+        sum(transactions.gas_used) gas_total_used,
+        sum(transactions.gas_used * case when gas_prices.gas_price is not null THEN gas_prices.gas_price else (select gas_price from gas_prices order by date desc limit 1) end) / power(10, 9) gas_fees_total_gwei,
+        sum(transactions.gas_used * case when gas_prices.gas_price is not null THEN gas_prices.gas_price else (select gas_price from gas_prices order by date desc limit 1) end) / power(10, 18) gas_fees_total_eth,
+        sum(transactions.gas_used * case when gas_prices.gas_price is not null THEN gas_prices.gas_price else (select gas_price from gas_prices order by date desc limit 1) end * (market_history.opening_price + market_history.closing_price) / 2) / power(10, 18) gas_fees_total_usd
+
     FROM transactions
     inner join blocks on blocks.number = transactions.block_number
     left outer join gas_prices on gas_prices.date::date = blocks.timestamp::date
@@ -87,11 +95,6 @@ def collect_schain_stats(schain_name):
         WHERE NOW()::date-blocks.timestamp::date < 30
         group by blocks.timestamp
     ) as foo;
-    ''', '''
-    SELECT 
-        count(distinct hash) tx_count_total, 
-        count(distinct from_address_hash) user_count_total
-    from transactions
     ''']
     multi_queries = {
         'data_by_days': '''
@@ -213,3 +216,18 @@ def update_total_dict(total_stats, schain_stats):
         else:
             total_stats[key] = total_stats.get(key, 0) + schain_stats[key]
     return total_stats
+
+
+
+"""
+SELECT
+    sum(transactions.gas_used) gas_total_used,
+    sum(transactions.gas_used * case when gas_prices.gas_price is not null THEN gas_prices.gas_price else (select gas_price from gas_prices order by date desc limit 1) end) / power(10, 9) gas_fees_total_gwei,
+    sum(transactions.gas_used * case when gas_prices.gas_price is not null THEN gas_prices.gas_price else (select gas_price from gas_prices order by date desc limit 1) end) / power(10, 18) gas_fees_total_eth,
+    sum(transactions.gas_used * case when gas_prices.gas_price is not null THEN gas_prices.gas_price else (select gas_price from gas_prices order by date desc limit 1) end * (market_history.opening_price + market_history.closing_price) / 2) / power(10, 18) gas_fees_total_usd
+FROM transactions
+inner join blocks on blocks.number = transactions.block_number
+left outer join gas_prices on gas_prices.date::date = blocks.timestamp::date
+left outer join market_history on market_history.date::date = blocks.timestamp::date;
+"""
+
