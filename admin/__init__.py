@@ -6,25 +6,27 @@ BLOCKSCOUT_PATH = os.path.join(PROJECT_PATH, 'deps', 'blockscout')
 EXPLORER_SCRIPT_PATH = os.path.join(BLOCKSCOUT_PATH, 'docker', 'run_schain_explorer.sh')
 SERVER_DATA_DIR = os.path.join(PROJECT_PATH, 'data')
 ABI_FILEPATH = os.path.join(SERVER_DATA_DIR, 'abi.json')
-MAINNET_IMA_ABI_FILEPATH = os.path.join(SERVER_DATA_DIR, 'ima.json')
+GAS_PRICES_FILEPATH = os.path.join(SERVER_DATA_DIR, 'gas_prices.csv')
 EXPLORERS_META_DATA_PATH = os.path.join(SERVER_DATA_DIR, 'meta.json')
 SCHAIN_CONFIG_DIR_PATH = os.path.join(SERVER_DATA_DIR, 'configs')
+
 
 HOST_DIR_PATH = os.environ.get('HOST_DIR_PATH')
 HOST_SCHAIN_CONFIG_DIR_PATH = os.path.join(HOST_DIR_PATH, 'data', 'configs') if HOST_DIR_PATH else None
 
-NGINX_CONFIG_PATH = os.path.join(SERVER_DATA_DIR, 'nginx.conf')
-NGINX_TEMP_CONFIG_PATH = os.path.join(SERVER_DATA_DIR, 'nginx.temp.conf')
-STATS_NGINX_CONFIG_PATH = os.path.join(SERVER_DATA_DIR, 'stats.conf')
+NGINX_CONFIGS_DIR = os.path.join(SERVER_DATA_DIR, 'nginx')
+EXPLORERS_NGINX_CONFIG_PATH = os.path.join(NGINX_CONFIGS_DIR, 'nginx.conf')
+STATS_NGINX_CONFIG_PATH = os.path.join(NGINX_CONFIGS_DIR, 'stats.conf')
 
 ENDPOINT = os.environ.get('ETH_ENDPOINT')
+ETH_API_KEY = os.environ.get('ETH_API_KEY')
 PROXY_DOMAIN_NAME = os.environ.get('PROXY_DOMAIN')
 EXPLORER_VERSION = os.environ.get('VERSION', 'latest')
 
 SSL_DIR_PATH = os.path.join(SERVER_DATA_DIR, 'certs')
 SSL_CRT_PATH = os.path.join(SSL_DIR_PATH, 'server.crt')
 SSL_KEY_PATH = os.path.join(SSL_DIR_PATH, 'server.key')
-DB_FILE_PATH = os.path.join(SERVER_DATA_DIR, 'database.db')
+DB_FILE_PATH = os.path.join(SERVER_DATA_DIR, 'stats.db')
 
 PROXY_ADMIN_PREDEPLOYED_ADDRESS = '0xD1000000000000000000000000000000000000D1'
 SCHAIN_OWNER_ALLOC = 1000000000000000000000000000000
@@ -34,6 +36,8 @@ BASE_ADDRESS = '0x0000000000000000000000000000000000000001'
 ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
 
 STATS_TIME_DELTA = 3600
+GAS_PRICE_REFRESHING_TIME = 86400
+
 FLASK_APP_PORT = os.environ.get('FLASK_APP_PORT')
 FLASK_APP_HOST = os.environ.get('FLASK_APP_HOST')
 FLASK_HOST_PORT = os.environ.get('FLASK_HOST_PORT')

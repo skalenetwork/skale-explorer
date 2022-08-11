@@ -1,4 +1,6 @@
+
 import logging
+from datetime import datetime
 from os.path import isfile
 from time import time
 
@@ -13,6 +15,7 @@ def create_meta_file():
         'explorers': {}
     }
     write_json(EXPLORERS_META_DATA_PATH, empty_data)
+
 
 def is_schain_upgraded(schain_name):
     schain_meta = get_schain_meta(schain_name)
@@ -92,3 +95,28 @@ def update_statistic_ts(ts):
     data = read_json(EXPLORERS_META_DATA_PATH)
     data['stats_last_updated'] = ts
     write_json(EXPLORERS_META_DATA_PATH, data)
+
+
+def is_gas_prices_updated():
+    data = read_json(EXPLORERS_META_DATA_PATH)
+    last_updated = data.get('gas_price_last_updated')
+    if not last_updated:
+        return False
+    current_date = datetime.today().date()
+    last_updated_date = datetime.strptime(last_updated, '%Y-%m-%d').date()
+    if last_updated_date < current_date:
+        return False
+    return True
+
+
+def update_gas_prices_time(date):
+    logger.info(f'Update last gas_price date: {date}')
+    data = read_json(EXPLORERS_META_DATA_PATH)
+    data['gas_price_last_updated'] = date
+    write_json(EXPLORERS_META_DATA_PATH, data)
+
+
+def get_gas_prices_update_time():
+    data = read_json(EXPLORERS_META_DATA_PATH)
+    last_updated = data.get('gas_price_last_updated')
+    return last_updated

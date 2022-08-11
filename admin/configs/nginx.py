@@ -1,5 +1,6 @@
 import os
-from admin import (NGINX_CONFIG_PATH, SSL_CRT_PATH, SSL_KEY_PATH, FLASK_HOST_PORT, STATS_NGINX_CONFIG_PATH)
+from admin import (EXPLORERS_NGINX_CONFIG_PATH, SSL_CRT_PATH, SSL_KEY_PATH,
+                   FLASK_HOST_PORT, STATS_NGINX_CONFIG_PATH)
 import crossplane
 
 from admin.configs.meta import get_explorers_meta
@@ -111,7 +112,7 @@ def regenerate_nginx_config():
             schain_config = generate_schain_nginx_config(schain_name, explorer_endpoint)
         nginx_cfg.append(schain_config)
     formatted_config = crossplane.build(nginx_cfg)
-    with open(NGINX_CONFIG_PATH, 'w') as f:
+    with open(EXPLORERS_NGINX_CONFIG_PATH, 'w') as f:
         f.write(formatted_config)
 
 
