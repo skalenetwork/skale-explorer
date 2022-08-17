@@ -18,7 +18,7 @@ app = Flask(__name__)
 def get_stats():
     logger.debug(request)
     data = StatsRecord.get_last_stats()
-    return construct_ok_response(data)
+    return construct_ok_response(data, pretty=True)
 
 
 def main():
