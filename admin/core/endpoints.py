@@ -87,8 +87,11 @@ def endpoints_for_schain(schains_internal_contract, nodes_contract, schain_id):
             'base_port': node[3],
             'domain': nodes_contract.functions.getNodeDomainName(node_id).call()
         }
-        schain_ids = schains_internal_contract.functions.getSchainIdsForNode(node_id).call()
-        node_dict['schain_base_port'] = get_schain_base_port_on_node(schain_id, schain_ids, node_dict['base_port'])
+        schain_hashes = schains_internal_contract.functions.getSchainHashesForNode(node_id).call()
+        node_dict['schain_base_port'] = get_schain_base_port_on_node(
+            schain_id,
+            schain_hashes, node_dict['base_port']
+        )
         node_dict.update(calc_ports(node_dict['schain_base_port']))
 
         compose_endpoints(node_dict, endpoint_type='ip')
@@ -108,11 +111,17 @@ def get_all_names():
     web3 = Web3(provider)
     sm_abi = read_json(ABI_FILEPATH)
 
-    schains_internal_contract = web3.eth.contract(address=sm_abi['schains_internal_address'], abi=sm_abi['schains_internal_abi'])
-    schain_ids = schains_internal_contract.functions.getSchains().call()
+    schains_internal_contract = web3.eth.contract(
+        address=sm_abi['schains_internal_address'],
+        abi=sm_abi['schains_internal_abi']
+    )
+    schain_hashes = schains_internal_contract.functions.getSchains().call()
     first = int(SCHAIN_FIRST_INDEX) if SCHAIN_FIRST_INDEX else 0
-    last = int(SCHAIN_LAST_INDEX) if SCHAIN_LAST_INDEX else len(schain_ids)
-    return [schains_internal_contract.functions.schains(id).call()[0] for id in schain_ids[first:last]]
+    last = int(SCHAIN_LAST_INDEX) if SCHAIN_LAST_INDEX else len(schain_hashes)
+    return [
+        schains_internal_contract.functions.schains(id).call()[0]
+        for id in schain_hashes[first:last]
+    ]
 
 
 def is_dkg_passed(schain_name):
