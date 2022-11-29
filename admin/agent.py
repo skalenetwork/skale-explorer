@@ -8,7 +8,7 @@ import psycopg2
 from admin import EXPLORER_SCRIPT_PATH, EXPLORERS_META_DATA_PATH, EXPLORER_VERSION, ABI_FILEPATH
 from admin.configs.meta import is_current_version, is_schain_upgraded, verified_contracts, update_meta_data, \
     is_statistic_updated, update_statistic_ts, create_meta_file, get_explorers_meta, is_gas_prices_updated, \
-    update_gas_prices_time
+    update_gas_prices_time, get_schain_meta
 from admin.core.containers import (get_free_port, get_db_port, restart_nginx,
                                    is_explorer_running, remove_explorer)
 from admin.core.endpoints import get_all_names, get_schain_endpoint, is_dkg_passed
@@ -49,8 +49,13 @@ def run_explorer(schain_name, endpoint, ws_endpoint):
 
 
 def run_explorer_for_schain(schain_name):
-    endpoint = get_schain_endpoint(schain_name)
-    ws_endpoint = get_schain_endpoint(schain_name, ws=True)
+    schain_meta = get_schain_meta(schain_name)
+    if schain_meta and schain_meta.get('sync') is True:
+        endpoint = schain_meta['endpoint']
+        ws_endpoint = schain_meta['ws_endpoint']
+    else:
+        endpoint = get_schain_endpoint(schain_name)
+        ws_endpoint = get_schain_endpoint(schain_name, ws=True)
     if endpoint and ws_endpoint:
         run_explorer(schain_name, endpoint, ws_endpoint)
     else:
