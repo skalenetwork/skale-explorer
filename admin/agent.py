@@ -106,7 +106,7 @@ def main():
     while True:
         logger.info('Running new iteration...')
         run_iteration()
-        sleep_time = 600
+        sleep_time = 60
         logger.info(f'Sleeping {sleep_time}s')
         sleep(sleep_time)
 
