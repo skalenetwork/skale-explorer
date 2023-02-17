@@ -8,13 +8,16 @@ from admin.core.containers import restart_nginx
 from admin.statistics.database import StatsRecord
 from admin.utils.logger import init_logger
 from admin.utils.web import construct_ok_response
+from flask_cors import CORS, cross_origin
 
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
+CORS(app, support_credentials=True)
 
 
 @app.route("/stats")
+@cross_origin(supports_credentials=True)
 def get_stats():
     logger.debug(request)
     data = StatsRecord.get_last_stats()
