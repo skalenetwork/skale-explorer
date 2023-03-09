@@ -2,6 +2,7 @@ import logging
 import os
 import subprocess
 from datetime import datetime
+from threading import Thread
 from time import sleep
 import psycopg2
 
@@ -85,8 +86,8 @@ def check_explorer_status():
 
 
 def collect_statistics():
-    schains = get_all_names()
     if not is_statistic_updated():
+        schains = get_all_names()
         try:
             logger.info('Collecting statistics...')
             ts = update_schains_stats(schains)
@@ -96,8 +97,8 @@ def collect_statistics():
 
 
 def update_gas_prices():
-    schains = get_all_names()
     if not is_gas_prices_updated():
+        schains = get_all_names()
         logger.info('Updating mainnet gas_prices for sChains...')
         current_date = str(datetime.today().date())
         download_gas_prices(end_date=current_date)
@@ -107,15 +108,21 @@ def update_gas_prices():
 
 
 def run_checker():
-    pass
+    while True:
+        check_explorer_status()
+        sleep(60)
 
 
 def run_stats_collector():
-    pass
+    while True:
+        collect_statistics()
+        sleep(60)
 
 
 def run_gas_prices_update():
-    pass
+    while True:
+        update_gas_prices()
+        sleep(60)
 
 
 def run_iteration():
@@ -159,12 +166,12 @@ def main():
     if not os.path.isfile(EXPLORERS_META_DATA_PATH):
         create_meta_file()
     create_tables()
+
+    Thread(target=run_checker, daemon=True, name='Monitor1').start()
+    Thread(target=run_gas_prices_update, daemon=True, name='Monitor2').start()
+    Thread(target=run_stats_collector, daemon=True, name='Monitor3').start()
     while True:
-        logger.info('Running new iteration...')
-        run_iteration()
-        sleep_time = 60
-        logger.info(f'Sleeping {sleep_time}s')
-        sleep(sleep_time)
+        sleep(1)
 
 
 if __name__ == '__main__':
