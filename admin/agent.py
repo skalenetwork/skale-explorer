@@ -62,6 +62,62 @@ def run_explorer_for_schain(schain_name):
         logger.warning(f"Couldn't create blockexplorer instance for {schain_name}")
 
 
+def check_explorer_status():
+    explorers = get_explorers_meta()
+    schains = get_all_names()
+    for schain_name in schains:
+        if schain_name not in explorers and not is_dkg_passed(schain_name):
+            continue
+        if schain_name not in explorers:
+            run_explorer_for_schain(schain_name)
+            set_schain_upgraded(schain_name)
+        if not is_explorer_running(schain_name) or not is_current_version(schain_name):
+            if not is_explorer_running(schain_name):
+                logger.warning(f'Blockscout is not working for {schain_name}. Recreating...')
+            else:
+                logger.warning(f'Blockscout version is outdated for {schain_name}. Recreating...')
+            remove_explorer(schain_name)
+            if not is_schain_upgraded(schain_name):
+                upgrade(schain_name)
+            run_explorer_for_schain(schain_name)
+        if not verified_contracts(schain_name) and is_explorer_running(schain_name):
+            verify(schain_name)
+
+
+def collect_statistics():
+    schains = get_all_names()
+    if not is_statistic_updated():
+        try:
+            logger.info('Collecting statistics...')
+            ts = update_schains_stats(schains)
+            update_statistic_ts(ts)
+        except psycopg2.OperationalError as e:
+            logger.warning(f'Collecting failed: {e}')
+
+
+def update_gas_prices():
+    schains = get_all_names()
+    if not is_gas_prices_updated():
+        logger.info('Updating mainnet gas_prices for sChains...')
+        current_date = str(datetime.today().date())
+        download_gas_prices(end_date=current_date)
+        status = update_schains_gas_prices(schains)
+        if status:
+            update_gas_prices_time(current_date)
+
+
+def run_checker():
+    pass
+
+
+def run_stats_collector():
+    pass
+
+
+def run_gas_prices_update():
+    pass
+
+
 def run_iteration():
     explorers = get_explorers_meta()
     schains = get_all_names()
