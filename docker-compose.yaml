@@ -16,6 +16,7 @@ services:
       HOST_DIR_PATH: ${HOST_DIR_PATH}
       VERSION: ${VERSION}
       ETH_API_KEY: ${ETH_API_KEY}
+      SCHAIN_NAMES: ${SCHAIN_NAMES}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./data:/skale-explorer/data

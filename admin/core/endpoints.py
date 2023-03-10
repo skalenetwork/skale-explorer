@@ -6,7 +6,7 @@ from enum import Enum
 from web3 import Web3, HTTPProvider, WebsocketProvider
 from Crypto.Hash import keccak
 
-from admin import ENDPOINT, ABI_FILEPATH, PROXY_DOMAIN_NAME
+from admin import ENDPOINT, ABI_FILEPATH, PROXY_DOMAIN_NAME, SCHAIN_NAMES
 from admin.utils.helper import read_json
 
 logger = logging.getLogger(__name__)
@@ -107,6 +107,9 @@ def endpoints_for_schain(schains_internal_contract, nodes_contract, schain_id):
 
 
 def get_all_names():
+    if SCHAIN_NAMES:
+        return SCHAIN_NAMES.split(',')
+
     provider = HTTPProvider(ENDPOINT)
     web3 = Web3(provider)
     sm_abi = read_json(ABI_FILEPATH)
