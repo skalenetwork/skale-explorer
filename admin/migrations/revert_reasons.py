@@ -21,10 +21,12 @@ def upgrade_revert_reasons(schain_name):
     web3 = Web3(provider)
     cursor = conn.cursor()
     limit_number = 1000
-    select_query = f"""SELECT hash,status,revert_reason,block_number 
-                        FROM transactions 
-                        WHERE status=0 AND revert_reason is null 
-                        ORDER BY block_number DESC LIMIT {limit_number};"""
+    select_query = f"""
+        SELECT hash,status,revert_reason,block_number
+        FROM transactions
+        WHERE status=0 AND revert_reason is null
+        ORDER BY block_number DESC LIMIT {limit_number};
+    """
     cursor.execute(select_query)
 
     data = cursor.fetchall()

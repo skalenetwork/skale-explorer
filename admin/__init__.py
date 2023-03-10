@@ -12,7 +12,8 @@ SCHAIN_CONFIG_DIR_PATH = os.path.join(SERVER_DATA_DIR, 'configs')
 
 
 HOST_DIR_PATH = os.environ.get('HOST_DIR_PATH')
-HOST_SCHAIN_CONFIG_DIR_PATH = os.path.join(HOST_DIR_PATH, 'data', 'configs') if HOST_DIR_PATH else None
+HOST_SCHAIN_CONFIG_DIR_PATH = os.path.join(HOST_DIR_PATH, 'data', 'configs') \
+    if HOST_DIR_PATH else None
 
 NGINX_CONFIGS_DIR = os.path.join(SERVER_DATA_DIR, 'nginx')
 EXPLORERS_NGINX_CONFIG_PATH = os.path.join(NGINX_CONFIGS_DIR, 'nginx.conf')
@@ -22,6 +23,7 @@ ENDPOINT = os.environ.get('ETH_ENDPOINT')
 ETH_API_KEY = os.environ.get('ETH_API_KEY')
 PROXY_DOMAIN_NAME = os.environ.get('PROXY_DOMAIN')
 EXPLORER_VERSION = os.environ.get('VERSION', 'latest')
+SCHAIN_NAMES = os.environ.get('SCHAIN_NAMES')
 
 SSL_DIR_PATH = os.path.join(SERVER_DATA_DIR, 'certs')
 SSL_CRT_PATH = os.path.join(SSL_DIR_PATH, 'server.crt')

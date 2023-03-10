@@ -1,7 +1,8 @@
 import logging
 from playhouse.shortcuts import model_to_dict
 from peewee import (Model, SqliteDatabase, IntegerField, DateTimeField,
-                    FloatField, PrimaryKeyField, IntegrityError, DoesNotExist, ForeignKeyField, DateField, BooleanField)
+                    FloatField, PrimaryKeyField, IntegrityError, DoesNotExist,
+                    ForeignKeyField, DateField, BooleanField)
 from admin import DB_FILE_PATH
 
 logger = logging.getLogger(__name__)
