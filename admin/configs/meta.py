@@ -1,7 +1,6 @@
 
 import logging
 from datetime import datetime
-from os.path import isfile
 from time import time
 
 from admin import EXPLORERS_META_DATA_PATH, EXPLORER_VERSION, STATS_TIME_DELTA

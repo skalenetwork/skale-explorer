@@ -1,7 +1,5 @@
 import json
 import logging
-from os.path import join
-
 from admin import ZERO_ADDRESS, SCHAIN_CONFIG_DIR_PATH
 
 logger = logging.getLogger(__name__)
@@ -11,7 +9,6 @@ def get_schain_originator(schain: dict):
     if schain['originator'] == ZERO_ADDRESS:
         return schain['mainnetOwner']
     return schain['originator']
-
 
 
 def read_json(path, mode='r'):
