@@ -164,6 +164,7 @@ def collect_schain_stats(schain_name):
 def update_schains_stats(schain_names):
     total_stats = {}
     for schain in schain_names:
+        logger.info(f'Collecting stats for {schain}...')
         schain_stats = collect_schain_stats(schain)
         logger.info(f'Stats for {schain}: {schain_stats}')
         update_total_dict(total_stats, schain_stats)
