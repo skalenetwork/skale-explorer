@@ -1,6 +1,6 @@
 import json
 import logging
-from admin import ZERO_ADDRESS, SCHAIN_CONFIG_DIR_PATH
+from admin import ZERO_ADDRESS
 
 logger = logging.getLogger(__name__)
 

@@ -8,7 +8,8 @@ from admin.configs.meta import (update_meta_data, get_schain_meta, get_explorers
                                 verified_contracts)
 from admin.configs.nginx import regenerate_nginx_config
 from admin.configs.schains import generate_config
-from admin.core.containers import get_free_port, get_db_port, restart_nginx, is_explorer_running, remove_explorer
+from admin.core.containers import (get_free_port, get_db_port, restart_nginx,
+                                   is_explorer_running, remove_explorer)
 from admin.core.endpoints import is_dkg_passed, get_schain_endpoint
 from admin.core.verify import verify
 from admin.migrations.revert_reasons import upgrade

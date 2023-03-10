@@ -1,5 +1,4 @@
 import logging
-import csv
 from datetime import datetime
 
 import psycopg2

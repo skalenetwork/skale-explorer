@@ -68,11 +68,11 @@ def calc_ports(schain_base_port):
 
 
 def compose_endpoints(node_dict, endpoint_type):
-    node_dict[f'http_endpoint_{endpoint_type}'] = f'http://{node_dict[endpoint_type]}:{node_dict["httpRpcPort"]}'
-    node_dict[f'https_endpoint_{endpoint_type}'] = f'https://{node_dict[endpoint_type]}:{node_dict["httpsRpcPort"]}'
-    node_dict[f'ws_endpoint_{endpoint_type}'] = f'ws://{node_dict[endpoint_type]}:{node_dict["wsRpcPort"]}'
-    node_dict[f'wss_endpoint_{endpoint_type}'] = f'wss://{node_dict[endpoint_type]}:{node_dict["wssRpcPort"]}'
-    node_dict[f'info_http_endpoint_{endpoint_type}'] = f'http://{node_dict[endpoint_type]}:{node_dict["infoHttpRpcPort"]}'
+    node_dict[f'http_endpoint_{endpoint_type}'] = f'http://{node_dict[endpoint_type]}:{node_dict["httpRpcPort"]}' # noqa
+    node_dict[f'https_endpoint_{endpoint_type}'] = f'https://{node_dict[endpoint_type]}:{node_dict["httpsRpcPort"]}' # noqa
+    node_dict[f'ws_endpoint_{endpoint_type}'] = f'ws://{node_dict[endpoint_type]}:{node_dict["wsRpcPort"]}' # noqa
+    node_dict[f'wss_endpoint_{endpoint_type}'] = f'wss://{node_dict[endpoint_type]}:{node_dict["wssRpcPort"]}' # noqa
+    node_dict[f'info_http_endpoint_{endpoint_type}'] = f'http://{node_dict[endpoint_type]}:{node_dict["infoHttpRpcPort"]}' # noqa
 
 
 def endpoints_for_schain(schains_internal_contract, nodes_contract, schain_id):
@@ -132,7 +132,7 @@ def is_dkg_passed(schain_name):
     web3 = Web3(provider)
     sm_abi = read_json(ABI_FILEPATH)
     dkg_contract = web3.eth.contract(address=sm_abi['skale_d_k_g_address'],
-                                                  abi=sm_abi['skale_d_k_g_abi'])
+                                     abi=sm_abi['skale_d_k_g_abi'])
     group_id = web3.keccak(text=schain_name)
     return dkg_contract.functions.isLastDKGSuccessful(group_id).call()
 
@@ -164,7 +164,9 @@ def get_schain_endpoint(schain_name, ws=False):
     provider = HTTPProvider(ENDPOINT)
     web3 = Web3(provider)
     sm_abi = read_json(ABI_FILEPATH)
-    schains_internal_contract = web3.eth.contract(address=sm_abi['schains_internal_address'], abi=sm_abi['schains_internal_abi'])
+    schains_internal_contract = web3.eth.contract(
+        address=sm_abi['schains_internal_address'],
+        abi=sm_abi['schains_internal_abi'])
     nodes_contract = web3.eth.contract(address=sm_abi['nodes_address'], abi=sm_abi['nodes_abi'])
     schain_id = bytes.fromhex(schain_name_to_id(schain_name)[2:])
     endpoints = endpoints_for_schain(schains_internal_contract, nodes_contract, schain_id)

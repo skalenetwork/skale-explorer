@@ -22,4 +22,3 @@ def download_gas_prices(end_date, start_date=None):
         write_json(GAS_PRICES_FILEPATH, data)
     except requests.RequestException as e:
         logger.warning(f'Could not download gas_prices: {e}')
-

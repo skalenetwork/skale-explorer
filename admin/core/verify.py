@@ -60,7 +60,7 @@ def get_verified_contract_list(schain_name):
 
 def get_veify_url(schain_name):
     schain_explorer_endpoint = get_explorer_endpoint(schain_name)
-    return f'{schain_explorer_endpoint}/api?module=contract&action=verifysourcecode&codeformat=solidity-standard-json-input'
+    return f'{schain_explorer_endpoint}/api?module=contract&action=verifysourcecode&codeformat=solidity-standard-json-input' # noqa
 
 
 def send_verify_request(schain_name, verification_data):
@@ -96,11 +96,8 @@ def check_verify_status(schain_name, uid):
     headers = {'content-type': 'application/json'}
     try:
         while True:
-            url = f'{schain_explorer_endpoint}/api?module=contract&action=checkverifystatus&guid={uid}'
-            response = requests.get(
-                url,
-                headers=headers
-            ).json()
+            url = f'{schain_explorer_endpoint}/api?module=contract&action=checkverifystatus&guid={uid}' # noqa
+            response = requests.get(url, headers=headers).json()
             if response['result'] == 'Pending in queue' or response['result'] == 'Unknown UID':
                 logger.debug(f'Verify status: {response["result"]}...')
                 sleep(10)
