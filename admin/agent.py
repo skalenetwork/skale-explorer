@@ -32,14 +32,14 @@ def daemon(delay=60):
     return actual_decorator
 
 
-@daemon
+@daemon()
 def check_explorer_status():
     schains = get_all_names()
     for schain_name in schains:
         check_explorer_for_schain(schain_name)
 
 
-@daemon
+@daemon()
 def collect_statistics():
     if not is_statistic_updated():
         schains = get_all_names()
@@ -51,7 +51,7 @@ def collect_statistics():
             logger.warning(f'Collecting failed: {e}')
 
 
-@daemon
+@daemon()
 def update_gas_prices():
     if not is_gas_prices_updated():
         schains = get_all_names()
