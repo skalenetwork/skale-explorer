@@ -26,7 +26,11 @@ def daemon(delay=60):
         def wrapper(*args, **kwargs):
             logger.info(f'Initiating {func.__name__}')
             while True:
-                func(*args, **kwargs)
+                try:
+                    func(*args, **kwargs)
+                except Exception as e:
+                    logger.warning(f'{func.__name__} failed with: {e}')
+                    logger.warning(f'Restarting {func.__name__}...')
                 sleep(delay)
         return wrapper
     return actual_decorator
