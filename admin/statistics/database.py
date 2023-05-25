@@ -119,6 +119,16 @@ class SchainStatsRecord(BaseModel):
             logger.warning(err)
             return None, err
 
+    @classmethod
+    def get_last_stats(cls, schain_name):
+        try:
+            raw_result = cls.select().where(schain_name=schain_name).order_by(cls.id.desc()).get()
+            result = model_to_dict(raw_result, exclude=[cls.id])
+            result.update(model_to_dict(result.stats_record, exclude=[StatsRecord.id]))
+            return result
+        except DoesNotExist:
+            return None
+
 
 class NetworkStatsRecord(BaseModel):
     schains_number = IntegerField(default=0)
@@ -135,9 +145,5 @@ def create_tables():
         GroupStats.create_table()
 
     if not SchainStatsRecord.table_exists():
-        logger.info('Creating SchainStatsRecord table...')
-        SchainStatsRecord.create_table()
-
-    if not NetworkStatsRecord.table_exists():
         logger.info('Creating SchainStatsRecord table...')
         SchainStatsRecord.create_table()
