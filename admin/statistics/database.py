@@ -103,7 +103,7 @@ class GroupStats(BaseModel):
 
 class SchainStatsRecord(BaseModel):
     schain_name = CharField()
-    stats_record = ForeignKeyField(StatsRecord, related_name='schain_stats')
+    stats_record = ForeignKeyField(StatsRecord, related_name='schain_stats', unique=True)
 
     @classmethod
     def add(cls, **kwargs):
@@ -157,7 +157,7 @@ class SchainStatsRecord(BaseModel):
 
 class NetworkStatsRecord(BaseModel):
     schains_number = IntegerField(default=0)
-    stats_record = ForeignKeyField(StatsRecord, related_name='schain_stats')
+    stats_record = ForeignKeyField(StatsRecord, related_name='schain_stats', unique=True)
 
     @classmethod
     def add(cls, **kwargs):
