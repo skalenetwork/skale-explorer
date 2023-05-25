@@ -173,6 +173,16 @@ def update_schains_stats(schain_names):
                 cached_value = cached[key]
                 logger.warning(f'Key {key} not found, using cached value: {cached_value}')
                 schain_stats[key] = cached_value
+            if key == 'group_stats':
+                for sample_cached in cached[key]:
+                    is_find = False
+                    for sample in schain_stats[key]:
+                        if sample_cached['tx_date'] == sample['tx_date']:
+                            is_find = True
+                            break
+                    if not is_find:
+                        schain_stats[key].append(sample_cached)
+
         logger.info(f'Stats for {schain}: {schain_stats}')
         SchainStatsRecord.add(
             schain_name=schain,
