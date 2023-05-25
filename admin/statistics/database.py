@@ -159,6 +159,42 @@ class NetworkStatsRecord(BaseModel):
     schains_number = IntegerField(default=0)
     stats_record = ForeignKeyField(StatsRecord, related_name='schain_stats')
 
+    @classmethod
+    def add(cls, **kwargs):
+        try:
+            schains_number = kwargs.pop('schains_number')
+            stats_record, err = StatsRecord.add(**kwargs)
+            if err:
+                return None, err
+            network_stats = cls.create(stats_record=stats_record,
+                                      schains_number=schains_number)
+            return network_stats, None
+        except IntegrityError as err:
+            logger.warning(err)
+            return None, err
+
+    @classmethod
+    def get_last_stats(cls):
+        try:
+            raw_result = cls.select().order_by(cls.id.desc()).get()
+            result = model_to_dict(raw_result, exclude=[cls.id, StatsRecord.id, GroupStats.id], backrefs=True)
+            result.update(result.pop('stats_record'))
+            result['inserted_at'] = str(result['inserted_at'])
+            group_stats = result.pop('group_stats')
+            group_by_days = []
+            group_by_months = []
+            for i in group_stats:
+                if i['data_by_days']:
+                    i['tx_date'] = i['tx_date'].strftime('%Y-%m-%d')
+                    group_by_days.append(i)
+                else:
+                    group_by_months.append(i)
+            result['group_by_days'] = group_by_days
+            result['group_by_months'] = group_by_months
+            return result
+        except DoesNotExist:
+            return None
+
 
 def create_tables():
     if not StatsRecord.table_exists():
