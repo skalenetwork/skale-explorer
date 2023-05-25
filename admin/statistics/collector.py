@@ -169,14 +169,14 @@ def update_schains_stats(schain_names):
         logger.info(f'Stats for {schain}: {schain_stats}')
         SchainStatsRecord.add(
             schain_name=schain,
+            inserted_at=datetime.fromtimestamp(time()),
             **schain_stats
         )
         update_total_dict(total_stats, schain_stats)
     logger.info(f'Schains: {len(schain_names)}; total stats: {total_stats}')
-    timestamp = time()
     StatsRecord.add(
         schains_number=len(schain_names),
-        inserted_at=datetime.fromtimestamp(timestamp),
+        inserted_at=datetime.fromtimestamp(time()),
         **total_stats
     )
     return timestamp
