@@ -174,6 +174,7 @@ def update_schains_stats(schain_names):
         )
         update_total_dict(total_stats, schain_stats)
     logger.info(f'Schains: {len(schain_names)}; total stats: {total_stats}')
+    timestamp = time()
     StatsRecord.add(
         schains_number=len(schain_names),
         inserted_at=datetime.fromtimestamp(time()),
