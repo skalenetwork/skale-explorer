@@ -122,7 +122,7 @@ class SchainStatsRecord(BaseModel):
     @classmethod
     def get_last_stats(cls, schain_name):
         try:
-            raw_result = cls.select().where(schain_name=schain_name).order_by(cls.id.desc()).get()
+            raw_result = cls.select().where(cls.schain_name == schain_name).order_by(cls.id.desc()).get()
             result = model_to_dict(raw_result, exclude=[cls.id])
             result.update(model_to_dict(result.stats_record, exclude=[StatsRecord.id]))
             return result
