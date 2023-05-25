@@ -51,12 +51,12 @@ class StatsRecord(BaseModel):
     @classmethod
     def add(cls, **kwargs):
         try:
-            groups = None
-            if kwargs.get('groups'):
-                groups = kwargs.pop('groups')
+            group_stats = None
+            if kwargs.get('group_stats'):
+                group_stats = kwargs.pop('group_stats')
             with cls.database.atomic():
                 stats = cls.create(**kwargs)
-                for group_stat in groups:
+                for group_stat in group_stats:
                     GroupStats.create(stats_record=stats, **group_stat)
             return stats, None
         except IntegrityError as err:

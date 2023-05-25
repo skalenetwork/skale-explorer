@@ -157,7 +157,7 @@ def collect_schain_stats(schain_name):
         for key in raw_result
         if raw_result[key] is not None
     }
-    result['groups'] = raw_result_multi
+    result['group_stats'] = raw_result_multi
     return result
 
 
@@ -223,7 +223,7 @@ def update_total_dict(total_stats, schain_stats):
     for key in schain_stats:
         if key.startswith('max'):
             total_stats[key] = max(total_stats.get(key, 0), schain_stats[key])
-        elif key.startswith('groups'):
+        elif key.startswith('group_stats'):
             if not total_stats.get(key):
                 total_stats[key] = []
             for sample in schain_stats[key]:
