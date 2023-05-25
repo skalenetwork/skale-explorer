@@ -2,7 +2,7 @@ import logging
 from playhouse.shortcuts import model_to_dict
 from peewee import (Model, SqliteDatabase, IntegerField, DateTimeField,
                     FloatField, PrimaryKeyField, IntegrityError, DoesNotExist,
-                    ForeignKeyField, DateField, BooleanField)
+                    ForeignKeyField, DateField, BooleanField, CharField)
 from admin import DB_FILE_PATH
 
 logger = logging.getLogger(__name__)
@@ -17,7 +17,6 @@ class BaseModel(Model):
 
 class StatsRecord(BaseModel):
     id = PrimaryKeyField()
-    schains_number = IntegerField(default=0)
     inserted_at = DateTimeField()
 
     tx_count_total = IntegerField(default=0)
@@ -102,6 +101,30 @@ class GroupStats(BaseModel):
     data_by_days = BooleanField()
 
 
+class SchainStatsRecord(BaseModel):
+    schain_name = CharField()
+    stats_record = ForeignKeyField(StatsRecord, related_name='schain_stats')
+
+    @classmethod
+    def add(cls, **kwargs):
+        try:
+            schain_name = kwargs.pop('schain_name')
+            stats_record, err = StatsRecord.add(**kwargs)
+            if err:
+                return None, err
+            schain_stats = cls.create(stats_record=stats_record,
+                                      schain_name=schain_name)
+            return schain_stats, None
+        except IntegrityError as err:
+            logger.warning(err)
+            return None, err
+
+
+class NetworkStatsRecord(BaseModel):
+    schains_number = IntegerField(default=0)
+    stats_record = ForeignKeyField(StatsRecord, related_name='schain_stats')
+
+
 def create_tables():
     if not StatsRecord.table_exists():
         logger.info('Creating StatsRecord table...')
@@ -110,3 +133,11 @@ def create_tables():
     if not GroupStats.table_exists():
         logger.info('Creating GroupStats table...')
         GroupStats.create_table()
+
+    if not SchainStatsRecord.table_exists():
+        logger.info('Creating SchainStatsRecord table...')
+        SchainStatsRecord.create_table()
+
+    if not NetworkStatsRecord.table_exists():
+        logger.info('Creating SchainStatsRecord table...')
+        SchainStatsRecord.create_table()
