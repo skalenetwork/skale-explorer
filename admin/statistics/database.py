@@ -123,8 +123,20 @@ class SchainStatsRecord(BaseModel):
     def get_last_stats(cls, schain_name):
         try:
             raw_result = cls.select().where(cls.schain_name == schain_name).order_by(cls.id.desc()).get()
-            result = model_to_dict(raw_result, exclude=[cls.id])
-            result.update(model_to_dict(result.stats_record, exclude=[StatsRecord.id]))
+            result = model_to_dict(raw_result, exclude=[cls.id, StatsRecord.id, GroupStats.id], backrefs=True)
+            result.update(result.pop('stats_record'))
+            result['inserted_at'] = str(result['inserted_at'])
+            group_stats = result.pop('group_stats')
+            group_by_days = []
+            group_by_months = []
+            for i in group_stats:
+                if i['data_by_days']:
+                    i['tx_date'] = i['tx_date'].strftime('%Y-%m-%d')
+                    group_by_days.append(i)
+                else:
+                    group_by_months.append(i)
+            result['group_by_days'] = group_by_days
+            result['group_by_months'] = group_by_months
             return result
         except DoesNotExist:
             return None
