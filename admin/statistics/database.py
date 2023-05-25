@@ -170,3 +170,7 @@ def create_tables():
     if not SchainStatsRecord.table_exists():
         logger.info('Creating SchainStatsRecord table...')
         SchainStatsRecord.create_table()
+
+    if not NetworkStatsRecord.table_exists():
+        logger.info('Creating NetworkStatsRecord table...')
+        NetworkStatsRecord.create_table()
