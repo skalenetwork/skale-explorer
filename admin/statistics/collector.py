@@ -166,6 +166,13 @@ def update_schains_stats(schain_names):
     for schain in schain_names:
         logger.info(f'Collecting stats for {schain}...')
         schain_stats = collect_schain_stats(schain)
+        cached = SchainStatsRecord.get_last_cached_stats(schain)
+        logger.info(f'Cached: {cached}')
+        for key in cached:
+            if not schain_stats.get(key):
+                cached_value = cached[key]
+                logger.warning(f'Key {key} not found, using cached value: {cached_value}')
+                schain_stats[key] = cached_value
         logger.info(f'Stats for {schain}: {schain_stats}')
         SchainStatsRecord.add(
             schain_name=schain,

@@ -141,6 +141,17 @@ class SchainStatsRecord(BaseModel):
         except DoesNotExist:
             return None
 
+    @classmethod
+    def get_last_cached_stats(cls, schain_name):
+        try:
+            raw_result = cls.select().where(cls.schain_name == schain_name).order_by(cls.id.desc()).get()
+            result = model_to_dict(raw_result, exclude=[cls.id, StatsRecord.id, GroupStats.id], backrefs=True)
+            result.update(result.pop('stats_record'))
+            result.pop('inserted_at')
+            return result
+        except DoesNotExist:
+            return None
+
 
 class NetworkStatsRecord(BaseModel):
     schains_number = IntegerField(default=0)
