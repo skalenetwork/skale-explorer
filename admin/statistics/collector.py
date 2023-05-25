@@ -169,7 +169,7 @@ def update_schains_stats(schain_names):
         cached = SchainStatsRecord.get_last_cached_stats(schain)
         logger.info(f'Cached: {cached}')
         for key in cached:
-            if not schain_stats.get(key):
+            if schain_stats.get(key) is None:
                 cached_value = cached[key]
                 logger.warning(f'Key {key} not found, using cached value: {cached_value}')
                 schain_stats[key] = cached_value
@@ -181,6 +181,7 @@ def update_schains_stats(schain_names):
                             is_find = True
                             break
                     if not is_find:
+                        logger.warning(f'{sample_cached["tx_date"]} not found, using cached value: {sample_cached}')
                         schain_stats[key].append(sample_cached)
 
         logger.info(f'Stats for {schain}: {schain_stats}')
