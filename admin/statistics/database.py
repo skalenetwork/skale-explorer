@@ -191,6 +191,7 @@ class NetworkStatsRecord(BaseModel):
                     group_by_months.append(i)
             result['group_by_days'] = group_by_days
             result['group_by_months'] = group_by_months
+            result.pop('schain_stats')
             return result
         except DoesNotExist:
             return None
