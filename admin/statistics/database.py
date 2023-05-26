@@ -122,8 +122,10 @@ class SchainStatsRecord(BaseModel):
     @classmethod
     def get_last_stats(cls, schain_name):
         try:
-            raw_result = cls.select().where(cls.schain_name == schain_name).order_by(cls.id.desc()).get()
-            result = model_to_dict(raw_result, exclude=[cls.id, StatsRecord.id, GroupStats.id], backrefs=True)
+            raw_result = cls.select().where(cls.schain_name == schain_name).order_by(cls.id.desc()).get() # noqa
+            result = model_to_dict(raw_result,
+                                   exclude=[cls.id, StatsRecord.id, GroupStats.id],
+                                   backrefs=True)
             result.update(result.pop('stats_record'))
             result.pop('schain_stats')
             result['inserted_at'] = str(result['inserted_at'])
@@ -145,8 +147,10 @@ class SchainStatsRecord(BaseModel):
     @classmethod
     def get_last_cached_stats(cls, schain_name):
         try:
-            raw_result = cls.select().where(cls.schain_name == schain_name).order_by(cls.id.desc()).get()
-            result = model_to_dict(raw_result, exclude=[cls.id, StatsRecord.id, GroupStats.id], backrefs=True)
+            raw_result = cls.select().where(cls.schain_name == schain_name).order_by(cls.id.desc()).get() # noqa
+            result = model_to_dict(raw_result,
+                                   exclude=[cls.id, StatsRecord.id, GroupStats.id],
+                                   backrefs=True)
             result.update(result.pop('stats_record'))
             result.pop('inserted_at')
             result.pop('schain_name')
@@ -168,7 +172,7 @@ class NetworkStatsRecord(BaseModel):
             if err:
                 return None, err
             network_stats = cls.create(stats_record=stats_record,
-                                      schains_number=schains_number)
+                                       schains_number=schains_number)
             return network_stats, None
         except IntegrityError as err:
             logger.warning(err)
@@ -178,7 +182,9 @@ class NetworkStatsRecord(BaseModel):
     def get_last_stats(cls):
         try:
             raw_result = cls.select().order_by(cls.id.desc()).get()
-            result = model_to_dict(raw_result, exclude=[cls.id, StatsRecord.id, GroupStats.id], backrefs=True)
+            result = model_to_dict(raw_result,
+                                   exclude=[cls.id, StatsRecord.id, GroupStats.id],
+                                   backrefs=True)
             result.update(result.pop('stats_record'))
             result['inserted_at'] = str(result['inserted_at'])
             group_stats = result.pop('group_stats')
