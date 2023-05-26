@@ -201,7 +201,8 @@ def refill_schain_stats(schain, schain_stats):
                         is_find = True
                         break
                 if not is_find:
-                    logger.warning(f'{sample_cached["tx_date"]} not found, using cached value: {sample_cached}')
+                    logger.warning(f'{sample_cached["tx_date"]} not found, '
+                                   f'using cached value: {sample_cached}')
                     schain_stats[key].append(sample_cached)
 
 
