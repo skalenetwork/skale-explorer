@@ -3,6 +3,7 @@ from playhouse.shortcuts import model_to_dict
 from peewee import (Model, SqliteDatabase, IntegerField, DateTimeField,
                     FloatField, PrimaryKeyField, IntegrityError, DoesNotExist,
                     ForeignKeyField, DateField, BooleanField, CharField)
+from decimal import Decimal
 from admin import DB_FILE_PATH
 
 logger = logging.getLogger(__name__)
@@ -51,9 +52,7 @@ class StatsRecord(BaseModel):
     @classmethod
     def add(cls, **kwargs):
         try:
-            group_stats = None
-            if kwargs.get('group_stats'):
-                group_stats = kwargs.pop('group_stats')
+            group_stats = kwargs.pop('group_stats')
             with cls.database.atomic():
                 stats = cls.create(**kwargs)
                 for group_stat in group_stats:
@@ -155,6 +154,11 @@ class SchainStatsRecord(BaseModel):
             result.pop('inserted_at')
             result.pop('schain_name')
             result.pop('schain_stats')
+            for group in result['group_stats']:
+                if group['data_by_days']:
+                    group['tx_date'] = group['tx_date'].strftime('%Y-%m-%d')
+                if type(group['gas_total_used']) == float:
+                    group['gas_total_used'] = Decimal(group['gas_total_used'])
             return result
         except DoesNotExist:
             return None

@@ -168,23 +168,7 @@ def update_schains_stats(schain_names):
     for schain in schain_names:
         logger.info(f'Collecting stats for {schain}...')
         schain_stats = collect_schain_stats(schain)
-        cached = SchainStatsRecord.get_last_cached_stats(schain)
-        for key in cached:
-            if schain_stats.get(key) is None:
-                cached_value = cached[key]
-                logger.warning(f'Key {key} not found, using cached value: {cached_value}')
-                schain_stats[key] = cached_value
-            if key == 'group_stats':
-                for sample_cached in cached[key]:
-                    is_find = False
-                    for sample in schain_stats[key]:
-                        if sample_cached['tx_date'] == sample['tx_date']:
-                            is_find = True
-                            break
-                    if not is_find:
-                        logger.warning(f'{sample_cached["tx_date"]} not found, using cached value: {sample_cached}')
-                        schain_stats[key].append(sample_cached)
-
+        refill_schain_stats(schain, schain_stats)
         logger.info(f'Stats for {schain}: {schain_stats}')
         SchainStatsRecord.add(
             schain_name=schain,
@@ -200,6 +184,28 @@ def update_schains_stats(schain_names):
         **total_stats
     )
     return timestamp
+
+
+def refill_schain_stats(schain, schain_stats):
+    cached = SchainStatsRecord.get_last_cached_stats(schain)
+    if cached is None:
+        return
+    for key in cached:
+        if schain_stats.get(key) is None:
+            cached_value = cached[key]
+            logger.warning(f'Key {key} not found, using cached value: {cached_value}')
+            schain_stats[key] = cached_value
+        if key == 'group_stats':
+            for sample_cached in cached[key]:
+                is_find = False
+                for sample in schain_stats[key]:
+                    if sample_cached['tx_date'] == sample['tx_date']:
+                        is_find = True
+                        break
+                if not is_find:
+                    logger.warning(f'{sample_cached["tx_date"]} not found, '
+                                   f'using cached value: {sample_cached}')
+                    schain_stats[key].append(sample_cached)
 
 
 def execute_query(query, **connection_creds):
