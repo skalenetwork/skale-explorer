@@ -209,9 +209,10 @@ def refill_schain_stats(schain, schain_stats):
 
 
 def execute_query(query, **connection_creds):
-    attempts = 0
+    attempt = 0
+    total_attempts = 3
     schain_name = connection_creds.pop('schain_name')
-    while attempts < 3:
+    while attempt < total_attempts:
         try:
             with psycopg2.connect(**connection_creds) as conn:
                 with conn.cursor(cursor_factory=RealDictCursor) as cursor:
@@ -221,10 +222,10 @@ def execute_query(query, **connection_creds):
                         'data': cursor.fetchall()
                     }
         except Exception as e:
-            logger.warning(f'Query failed: {e}')
+            attempt += 1
+            logger.warning(f'Query failed: {e}, attempt: {attempt}/{total_attempts}')
             restart_postgres(schain_name)
             sleep(60)
-            attempts += 1
     return {
         'status': 1,
         'data': None
