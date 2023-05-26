@@ -142,7 +142,7 @@ def generate_base_stats_nginx_config():
                     {
                         "directive": "proxy_pass",
                         "args": [
-                            f'http://127.0.0.1:{FLASK_HOST_PORT}/stats'
+                            f'http://127.0.0.1:{FLASK_HOST_PORT}/stats/'
                         ]
                     }
                 ]
