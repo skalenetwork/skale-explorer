@@ -23,7 +23,7 @@ def collect_schain_stats(schain_name):
         'host': 'localhost',
         'database': 'explorer',
         'user': 'postgres',
-        'port': schain_meta['db_port']
+        'port': schain_meta['db_port'],
         'schain_name': schain_name
     }
 
