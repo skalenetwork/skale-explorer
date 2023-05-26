@@ -2,7 +2,7 @@ import logging
 from playhouse.shortcuts import model_to_dict
 from peewee import (Model, SqliteDatabase, IntegerField, DateTimeField,
                     FloatField, PrimaryKeyField, IntegrityError, DoesNotExist,
-                    ForeignKeyField, DateField, BooleanField)
+                    ForeignKeyField, DateField, BooleanField, CharField)
 from admin import DB_FILE_PATH
 
 logger = logging.getLogger(__name__)
@@ -17,7 +17,6 @@ class BaseModel(Model):
 
 class StatsRecord(BaseModel):
     id = PrimaryKeyField()
-    schains_number = IntegerField(default=0)
     inserted_at = DateTimeField()
 
     tx_count_total = IntegerField(default=0)
@@ -52,12 +51,12 @@ class StatsRecord(BaseModel):
     @classmethod
     def add(cls, **kwargs):
         try:
-            groups = None
-            if kwargs.get('groups'):
-                groups = kwargs.pop('groups')
+            group_stats = None
+            if kwargs.get('group_stats'):
+                group_stats = kwargs.pop('group_stats')
             with cls.database.atomic():
                 stats = cls.create(**kwargs)
-                for group_stat in groups:
+                for group_stat in group_stats:
                     GroupStats.create(stats_record=stats, **group_stat)
             return stats, None
         except IntegrityError as err:
@@ -102,6 +101,109 @@ class GroupStats(BaseModel):
     data_by_days = BooleanField()
 
 
+class SchainStatsRecord(BaseModel):
+    schain_name = CharField()
+    stats_record = ForeignKeyField(StatsRecord, related_name='schain_stats', unique=True)
+
+    @classmethod
+    def add(cls, **kwargs):
+        try:
+            schain_name = kwargs.pop('schain_name')
+            stats_record, err = StatsRecord.add(**kwargs)
+            if err:
+                return None, err
+            schain_stats = cls.create(stats_record=stats_record,
+                                      schain_name=schain_name)
+            return schain_stats, None
+        except IntegrityError as err:
+            logger.warning(err)
+            return None, err
+
+    @classmethod
+    def get_last_stats(cls, schain_name):
+        try:
+            raw_result = cls.select().where(cls.schain_name == schain_name).order_by(cls.id.desc()).get() # noqa
+            result = model_to_dict(raw_result,
+                                   exclude=[cls.id, StatsRecord.id, GroupStats.id],
+                                   backrefs=True)
+            result.update(result.pop('stats_record'))
+            result.pop('schain_stats')
+            result['inserted_at'] = str(result['inserted_at'])
+            group_stats = result.pop('group_stats')
+            group_by_days = []
+            group_by_months = []
+            for i in group_stats:
+                if i['data_by_days']:
+                    i['tx_date'] = i['tx_date'].strftime('%Y-%m-%d')
+                    group_by_days.append(i)
+                else:
+                    group_by_months.append(i)
+            result['group_by_days'] = group_by_days
+            result['group_by_months'] = group_by_months
+            return result
+        except DoesNotExist:
+            return None
+
+    @classmethod
+    def get_last_cached_stats(cls, schain_name):
+        try:
+            raw_result = cls.select().where(cls.schain_name == schain_name).order_by(cls.id.desc()).get() # noqa
+            result = model_to_dict(raw_result,
+                                   exclude=[cls.id, StatsRecord.id, GroupStats.id],
+                                   backrefs=True)
+            result.update(result.pop('stats_record'))
+            result.pop('inserted_at')
+            result.pop('schain_name')
+            result.pop('schain_stats')
+            return result
+        except DoesNotExist:
+            return None
+
+
+class NetworkStatsRecord(BaseModel):
+    schains_number = IntegerField(default=0)
+    stats_record = ForeignKeyField(StatsRecord, related_name='schain_stats', unique=True)
+
+    @classmethod
+    def add(cls, **kwargs):
+        try:
+            schains_number = kwargs.pop('schains_number')
+            stats_record, err = StatsRecord.add(**kwargs)
+            if err:
+                return None, err
+            network_stats = cls.create(stats_record=stats_record,
+                                       schains_number=schains_number)
+            return network_stats, None
+        except IntegrityError as err:
+            logger.warning(err)
+            return None, err
+
+    @classmethod
+    def get_last_stats(cls):
+        try:
+            raw_result = cls.select().order_by(cls.id.desc()).get()
+            result = model_to_dict(raw_result,
+                                   exclude=[cls.id, StatsRecord.id, GroupStats.id],
+                                   backrefs=True)
+            result.update(result.pop('stats_record'))
+            result['inserted_at'] = str(result['inserted_at'])
+            group_stats = result.pop('group_stats')
+            group_by_days = []
+            group_by_months = []
+            for i in group_stats:
+                if i['data_by_days']:
+                    i['tx_date'] = i['tx_date'].strftime('%Y-%m-%d')
+                    group_by_days.append(i)
+                else:
+                    group_by_months.append(i)
+            result['group_by_days'] = group_by_days
+            result['group_by_months'] = group_by_months
+            result.pop('schain_stats')
+            return result
+        except DoesNotExist:
+            return None
+
+
 def create_tables():
     if not StatsRecord.table_exists():
         logger.info('Creating StatsRecord table...')
@@ -110,3 +212,11 @@ def create_tables():
     if not GroupStats.table_exists():
         logger.info('Creating GroupStats table...')
         GroupStats.create_table()
+
+    if not SchainStatsRecord.table_exists():
+        logger.info('Creating SchainStatsRecord table...')
+        SchainStatsRecord.create_table()
+
+    if not NetworkStatsRecord.table_exists():
+        logger.info('Creating NetworkStatsRecord table...')
+        NetworkStatsRecord.create_table()

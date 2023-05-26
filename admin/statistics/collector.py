@@ -1,13 +1,14 @@
 import logging
 from datetime import datetime
 from decimal import Decimal
-from time import time
+from time import time, sleep
 
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
 from admin.configs.meta import get_schain_meta
-from admin.statistics.database import StatsRecord
+from admin.core.containers import restart_postgres
+from admin.statistics.database import SchainStatsRecord, NetworkStatsRecord
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +23,8 @@ def collect_schain_stats(schain_name):
         'host': 'localhost',
         'database': 'explorer',
         'user': 'postgres',
-        'port': schain_meta['db_port']
+        'port': schain_meta['db_port'],
+        'schain_name': schain_name
     }
 
     queries = ['''
@@ -157,7 +159,7 @@ def collect_schain_stats(schain_name):
         for key in raw_result
         if raw_result[key] is not None
     }
-    result['groups'] = raw_result_multi
+    result['group_stats'] = raw_result_multi
     return result
 
 
@@ -166,40 +168,68 @@ def update_schains_stats(schain_names):
     for schain in schain_names:
         logger.info(f'Collecting stats for {schain}...')
         schain_stats = collect_schain_stats(schain)
+        cached = SchainStatsRecord.get_last_cached_stats(schain)
+        for key in cached:
+            if schain_stats.get(key) is None:
+                cached_value = cached[key]
+                logger.warning(f'Key {key} not found, using cached value: {cached_value}')
+                schain_stats[key] = cached_value
+            if key == 'group_stats':
+                for sample_cached in cached[key]:
+                    is_find = False
+                    for sample in schain_stats[key]:
+                        if sample_cached['tx_date'] == sample['tx_date']:
+                            is_find = True
+                            break
+                    if not is_find:
+                        logger.warning(f'{sample_cached["tx_date"]} not found, using cached value: {sample_cached}')
+                        schain_stats[key].append(sample_cached)
+
         logger.info(f'Stats for {schain}: {schain_stats}')
+        SchainStatsRecord.add(
+            schain_name=schain,
+            inserted_at=datetime.fromtimestamp(time()),
+            **schain_stats
+        )
         update_total_dict(total_stats, schain_stats)
     logger.info(f'Schains: {len(schain_names)}; total stats: {total_stats}')
     timestamp = time()
-    StatsRecord.add(
+    NetworkStatsRecord.add(
         schains_number=len(schain_names),
-        inserted_at=datetime.fromtimestamp(timestamp),
+        inserted_at=datetime.fromtimestamp(time()),
         **total_stats
     )
     return timestamp
 
 
 def execute_query(query, **connection_creds):
-    try:
-        with psycopg2.connect(**connection_creds) as conn:
-            with conn.cursor(cursor_factory=RealDictCursor) as cursor:
-                cursor.execute(query)
-                return {
-                    'status': 0,
-                    'data': cursor.fetchall()
-                }
-    except Exception as e:
-        logger.warning(f'Query failed: {e}')
-        return {
-            'status': 1,
-            'data': None
-        }
+    attempts = 0
+    schain_name = connection_creds.pop('schain_name')
+    while attempts < 3:
+        try:
+            with psycopg2.connect(**connection_creds) as conn:
+                with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+                    cursor.execute(query)
+                    return {
+                        'status': 0,
+                        'data': cursor.fetchall()
+                    }
+        except Exception as e:
+            logger.warning(f'Query failed: {e}')
+            restart_postgres(schain_name)
+            sleep(60)
+            attempts += 1
+    return {
+        'status': 1,
+        'data': None
+    }
 
 
 def update_total_dict(total_stats, schain_stats):
     for key in schain_stats:
         if key.startswith('max'):
             total_stats[key] = max(total_stats.get(key, 0), schain_stats[key])
-        elif key.startswith('groups'):
+        elif key.startswith('group_stats'):
             if not total_stats.get(key):
                 total_stats[key] = []
             for sample in schain_stats[key]:

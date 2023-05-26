@@ -70,6 +70,15 @@ def restart_nginx():
     nginx.restart()
 
 
+def restart_postgres(schain_name):
+    try:
+        db = dutils.containers.get(f'postgres_{schain_name}')
+        logger.info(f'Restarting postgres_{schain_name} container...')
+        db.restart()
+    except docker.errors.NotFound:
+        logger.warning(f'DB for {schain_name} not found')
+
+
 def get_free_port():
     with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
         s.bind(('', 0))
