@@ -168,9 +168,7 @@ def update_schains_stats(schain_names):
     for schain in schain_names:
         logger.info(f'Collecting stats for {schain}...')
         schain_stats = collect_schain_stats(schain)
-        logger.info(f'Updated stats: {schain_stats}')
         cached = SchainStatsRecord.get_last_cached_stats(schain)
-        logger.info(f'Cached: {cached}')
         for key in cached:
             if schain_stats.get(key) is None:
                 cached_value = cached[key]

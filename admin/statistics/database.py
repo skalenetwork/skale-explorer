@@ -125,6 +125,7 @@ class SchainStatsRecord(BaseModel):
             raw_result = cls.select().where(cls.schain_name == schain_name).order_by(cls.id.desc()).get()
             result = model_to_dict(raw_result, exclude=[cls.id, StatsRecord.id, GroupStats.id], backrefs=True)
             result.update(result.pop('stats_record'))
+            result.pop('schain_stats')
             result['inserted_at'] = str(result['inserted_at'])
             group_stats = result.pop('group_stats')
             group_by_days = []
