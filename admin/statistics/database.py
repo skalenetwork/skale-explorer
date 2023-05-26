@@ -52,9 +52,7 @@ class StatsRecord(BaseModel):
     @classmethod
     def add(cls, **kwargs):
         try:
-            group_stats = None
-            if kwargs.get('group_stats'):
-                group_stats = kwargs.pop('group_stats')
+            group_stats = kwargs.pop('group_stats')
             with cls.database.atomic():
                 stats = cls.create(**kwargs)
                 for group_stat in group_stats:
