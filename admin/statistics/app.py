@@ -16,7 +16,7 @@ app = Flask(__name__)
 CORS(app, support_credentials=True)
 
 
-@app.route("/stats")
+@app.route("/stats/")
 @cross_origin(supports_credentials=True)
 def get_stats():
     logger.debug(request)
