@@ -206,6 +206,7 @@ def update_schains_stats(schain_names):
 
 def execute_query(query, **connection_creds):
     attempts = 0
+    schain_name = connection_creds.pop('schain_name')
     while attempts < 3:
         try:
             with psycopg2.connect(**connection_creds) as conn:
@@ -217,7 +218,7 @@ def execute_query(query, **connection_creds):
                     }
         except Exception as e:
             logger.warning(f'Query failed: {e}')
-            restart_postgres(connection_creds['schain_name'])
+            restart_postgres(schain_name)
             sleep(60)
             attempts += 1
     return {
