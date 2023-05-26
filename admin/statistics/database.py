@@ -155,6 +155,9 @@ class SchainStatsRecord(BaseModel):
             result.pop('inserted_at')
             result.pop('schain_name')
             result.pop('schain_stats')
+            for group in result['group_stats']:
+                if group['data_by_days']:
+                    group['tx_date'] = group['tx_date'].strftime('%Y-%m-%d')
             return result
         except DoesNotExist:
             return None
