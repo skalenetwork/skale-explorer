@@ -5,7 +5,7 @@ from flask import Flask, request
 from admin import FLASK_APP_PORT, FLASK_APP_HOST
 from admin.configs.nginx import generate_stats_nginx_config
 from admin.core.containers import restart_nginx
-from admin.statistics.database import NetworkStatsRecord
+from admin.statistics.database import NetworkStatsRecord, SchainStatsRecord
 from admin.utils.logger import init_logger
 from admin.utils.web import construct_ok_response
 from flask_cors import CORS, cross_origin
@@ -21,6 +21,14 @@ CORS(app, support_credentials=True)
 def get_stats():
     logger.debug(request)
     data = NetworkStatsRecord.get_last_stats()
+    return construct_ok_response(data, pretty=True)
+
+
+@app.route("/stats/<schain_name>")
+@cross_origin(supports_credentials=True)
+def get_schain_stats(schain_name):
+    logger.debug(request)
+    data = SchainStatsRecord.get_last_stats(schain_name)
     return construct_ok_response(data, pretty=True)
 
 
