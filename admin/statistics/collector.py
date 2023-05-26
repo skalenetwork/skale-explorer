@@ -199,7 +199,7 @@ def refill_schain_stats(schain, schain_stats):
             for sample_cached in cached[key]:
                 is_find = False
                 for sample in schain_stats[key]:
-                    if sample_cached['tx_date'] == sample['tx_date']:
+                    if sample_cached['tx_date'].strftime('%Y-%m-%d') == sample['tx_date']:
                         is_find = True
                         break
                 if not is_find:
