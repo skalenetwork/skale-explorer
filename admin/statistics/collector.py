@@ -1,12 +1,13 @@
 import logging
 from datetime import datetime
 from decimal import Decimal
-from time import time
+from time import time, sleep
 
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
 from admin.configs.meta import get_schain_meta
+from admin.core.containers import restart_postgres
 from admin.statistics.database import SchainStatsRecord, NetworkStatsRecord
 
 logger = logging.getLogger(__name__)
@@ -23,6 +24,7 @@ def collect_schain_stats(schain_name):
         'database': 'explorer',
         'user': 'postgres',
         'port': schain_meta['db_port']
+        'schain_name': schain_name
     }
 
     queries = ['''
@@ -203,20 +205,25 @@ def update_schains_stats(schain_names):
 
 
 def execute_query(query, **connection_creds):
-    try:
-        with psycopg2.connect(**connection_creds) as conn:
-            with conn.cursor(cursor_factory=RealDictCursor) as cursor:
-                cursor.execute(query)
-                return {
-                    'status': 0,
-                    'data': cursor.fetchall()
-                }
-    except Exception as e:
-        logger.warning(f'Query failed: {e}')
-        return {
-            'status': 1,
-            'data': None
-        }
+    attempts = 0
+    while attempts < 3:
+        try:
+            with psycopg2.connect(**connection_creds) as conn:
+                with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+                    cursor.execute(query)
+                    return {
+                        'status': 0,
+                        'data': cursor.fetchall()
+                    }
+        except Exception as e:
+            logger.warning(f'Query failed: {e}')
+            restart_postgres(connection_creds['schain_name'])
+            sleep(60)
+            attempts += 1
+    return {
+        'status': 1,
+        'data': None
+    }
 
 
 def update_total_dict(total_stats, schain_stats):
