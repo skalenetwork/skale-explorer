@@ -188,6 +188,8 @@ def update_schains_stats(schain_names):
 
 def refill_schain_stats(schain, schain_stats):
     cached = SchainStatsRecord.get_last_cached_stats(schain)
+    if cached is None:
+        return
     for key in cached:
         if schain_stats.get(key) is None:
             cached_value = cached[key]
