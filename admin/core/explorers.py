@@ -29,8 +29,8 @@ def run_explorer(schain_name, endpoint, ws_endpoint):
         'WS_ENDPOINT': ws_endpoint,
         'CONFIG_PATH': config_host_path,
         'BLOCKSCOUT_VERSION': EXPLORER_VERSION,
-        'INDEXER_RECEIPTS_BATCH_SIZE': '127',
-        'INDEXER_COIN_BALANCES_BATCH_SIZE': '127'
+        'INDEXER_RECEIPTS_BATCH_SIZE': '128',
+        'INDEXER_COIN_BALANCES_BATCH_SIZE': '128'
     }
     logger.info(f'Running explorer with {env}')
     logger.info('=' * 100)
