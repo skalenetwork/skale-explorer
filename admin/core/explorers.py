@@ -2,7 +2,7 @@ import logging
 import os
 import subprocess
 
-from admin import EXPLORER_VERSION, EXPLORER_SCRIPT_PATH
+from admin import EXPLORER_VERSION, DOCKER_COMPOSE_CONFIG_PATH, DOCKER_COMPOSE_BIN_PATH, COMPOSE_HTTP_TIMEOUT
 from admin.configs.meta import (update_meta_data, get_schain_meta, get_explorers_meta,
                                 set_schain_upgraded, is_current_version, is_schain_upgraded,
                                 verified_contracts)
@@ -28,11 +28,20 @@ def run_explorer(schain_name, endpoint, ws_endpoint):
         'ENDPOINT': endpoint,
         'WS_ENDPOINT': ws_endpoint,
         'CONFIG_PATH': config_host_path,
-        'BLOCKSCOUT_VERSION': EXPLORER_VERSION
+        'BLOCKSCOUT_VERSION': EXPLORER_VERSION,
+        'COMPOSE_PROJECT_NAME': schain_name,
+        'COMPOSE_HTTP_TIMEOUT': str(COMPOSE_HTTP_TIMEOUT)
     }
     logger.info(f'Running explorer with {env}')
     logger.info('=' * 100)
-    subprocess.run(['bash', EXPLORER_SCRIPT_PATH], env={**env, **os.environ})
+    command = [
+        DOCKER_COMPOSE_BIN_PATH,
+        '-f',
+        DOCKER_COMPOSE_CONFIG_PATH,
+        'up',
+        '-d'
+    ]
+    result = subprocess.run(command, env={**env, **os.environ}, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     logger.info('=' * 100)
     update_meta_data(schain_name, explorer_port, db_port, endpoint, ws_endpoint, EXPLORER_VERSION)
     regenerate_nginx_config()

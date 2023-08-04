@@ -6,7 +6,7 @@ from threading import Thread
 from time import sleep
 import psycopg2
 
-from admin import EXPLORERS_META_DATA_PATH, ABI_FILEPATH
+from admin import EXPLORERS_META_DATA_PATH, ABI_FILEPATH, STATS_ENABLED
 from admin.configs.meta import (is_statistic_updated, update_statistic_ts, create_meta_file,
                                 is_gas_prices_updated, update_gas_prices_time)
 from admin.core.endpoints import get_all_names
@@ -74,8 +74,9 @@ def main():
     create_tables()
 
     Thread(target=check_explorer_status, daemon=True, name='explorers-checker').start()
-    Thread(target=update_gas_prices, daemon=True, name='gas-price-checker').start()
-    Thread(target=collect_statistics, daemon=True, name='stats-collector').start()
+    if STATS_ENABLED:
+        Thread(target=update_gas_prices, daemon=True, name='gas-price-checker').start()
+        Thread(target=collect_statistics, daemon=True, name='stats-collector').start()
     while True:
         sleep(1)
 
