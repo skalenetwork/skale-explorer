@@ -18,8 +18,9 @@ logger = logging.getLogger(__name__)
 
 
 def run_explorer(schain_name, endpoint, ws_endpoint):
-    explorer_port = get_free_port()
-    db_port = get_db_port(schain_name)
+    schain_meta = get_schain_meta(schain_name)
+    explorer_port = schain_meta['port'] if schain_meta else get_free_port()
+    db_port = schain_meta['db_port'] if schain_meta else get_free_port()
     config_host_path = generate_config(schain_name)
     env = {
         'SCHAIN_NAME': schain_name,
