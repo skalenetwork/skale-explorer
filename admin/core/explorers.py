@@ -28,12 +28,10 @@ def run_explorer(schain_name, endpoint, ws_endpoint):
         'ENDPOINT': endpoint,
         'WS_ENDPOINT': ws_endpoint,
         'CONFIG_PATH': config_host_path,
-        'BLOCKSCOUT_VERSION': EXPLORER_VERSION,
         'COMPOSE_PROJECT_NAME': schain_name,
         'COMPOSE_HTTP_TIMEOUT': str(COMPOSE_HTTP_TIMEOUT)
     }
     logger.info(f'Running explorer with {env}')
-    logger.info('=' * 100)
     command = [
         DOCKER_COMPOSE_BIN_PATH,
         '-f',
@@ -42,7 +40,6 @@ def run_explorer(schain_name, endpoint, ws_endpoint):
         '-d'
     ]
     result = subprocess.run(command, env={**env, **os.environ}, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-    logger.info('=' * 100)
     update_meta_data(schain_name, explorer_port, db_port, endpoint, ws_endpoint, EXPLORER_VERSION)
     regenerate_nginx_config()
     restart_nginx()
