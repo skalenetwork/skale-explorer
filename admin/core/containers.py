@@ -67,7 +67,7 @@ def get_container_host_port(container):
 def restart_nginx():
     nginx = dutils.containers.get('nginx')
     logger.info('Restarting nginx container...')
-    nginx.restart()
+    nginx.exec_run('nginx -s reload')
 
 
 def restart_postgres(schain_name):
