@@ -56,7 +56,8 @@ def collect_global_stats():
     covalent_monthly_stats = covalent_stats['group_by_months']
 
     if int(bs_stats['tx_count_30_days']) < int(covalent_stats['tx_count_30_days']):
-        bs_stats['tx_count_30_days'] = covalent_stats['tx_count_30_days']
+        bs_stats['tx_count_30_days'] = int(covalent_stats['tx_count_30_days'])
+        bs_stats['unique_tx_count_30_days'] = int(covalent_stats['tx_count_30_days'])
 
     total_txs = 0
     total_unique_txs = 0
