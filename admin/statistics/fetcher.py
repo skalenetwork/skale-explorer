@@ -72,6 +72,6 @@ def collect_global_stats():
         total_txs += month_data['tx_count']
         total_unique_txs += month_data['unique_tx']
 
-    bs_mothly_stats['tx_count_total'] = total_txs
-    bs_mothly_stats['unique_tx_count_total'] = total_txs
+    bs_stats['tx_count_total'] = total_txs
+    bs_stats['unique_tx_count_total'] = total_txs
     return bs_stats
