@@ -23,6 +23,7 @@ def run_explorer(schain_name, endpoint, ws_endpoint):
     explorer_port = schain_meta['port'] if schain_meta else get_free_port()
     db_port = schain_meta['db_port'] if schain_meta else get_free_port()
     scv_port = schain_meta['scv_port'] if schain_meta else get_free_port()
+    first_block = schain_meta['first_block'] if schain_meta else 0
     config_host_path = generate_config(schain_name)
     env = {
         'SCHAIN_NAME': schain_name,
@@ -33,7 +34,8 @@ def run_explorer(schain_name, endpoint, ws_endpoint):
         'WS_ENDPOINT': ws_endpoint,
         'CONFIG_PATH': config_host_path,
         'COMPOSE_PROJECT_NAME': schain_name,
-        'COMPOSE_HTTP_TIMEOUT': str(COMPOSE_HTTP_TIMEOUT)
+        'COMPOSE_HTTP_TIMEOUT': str(COMPOSE_HTTP_TIMEOUT),
+        'FIRST_BLOCK': str(first_block)
     }
     logger.info(f'Running explorer with {env}')
     command = [
@@ -45,7 +47,7 @@ def run_explorer(schain_name, endpoint, ws_endpoint):
     ]
     subprocess.run(command, env={**env, **os.environ})
     update_meta_data(schain_name, explorer_port, db_port, scv_port, 
-                     endpoint, ws_endpoint, EXPLORER_VERSION)
+                     endpoint, ws_endpoint, EXPLORER_VERSION, first_block)
     regenerate_nginx_config()
     restart_nginx()
     logger.info(f'sChain explorer is running on {schain_name}. subdomain')
