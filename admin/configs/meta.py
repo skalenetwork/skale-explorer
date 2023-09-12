@@ -36,7 +36,7 @@ def set_schain_upgraded(schain_name):
     write_json(EXPLORERS_META_DATA_PATH, meta)
 
 
-def update_meta_data(schain_name, port, db_port, endpoint, ws_endpoint, version):
+def update_meta_data(schain_name, port, db_port, scv_port, endpoint, ws_endpoint, version):
     logger.info(f'Updating meta data for {schain_name}')
     meta_data = read_json(EXPLORERS_META_DATA_PATH)
     explorers = meta_data['explorers']
@@ -44,6 +44,7 @@ def update_meta_data(schain_name, port, db_port, endpoint, ws_endpoint, version)
     schain_meta.update({
         'port': port,
         'db_port': db_port,
+        'scv_port': scv_port,
         'endpoint': endpoint,
         'ws_endpoint': ws_endpoint,
         'version': version,
