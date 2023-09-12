@@ -1,7 +1,6 @@
 web3==5.23.1
 docker==5.0.2
 crossplane==0.5.7
-psycopg2==2.9.3
 peewee==3.15.1
 flask==2.1.3
 
