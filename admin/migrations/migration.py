@@ -43,6 +43,7 @@ additional_columns = {
     "compiler_settings": []
 }
 
+
 def dump():
     db_params["port"] = from_db_port
     db_params["database"] = "explorer"
@@ -84,12 +85,14 @@ def dump():
     cursor.close()
     connection.close()
 
+
 def get_latest_id(cursor, table_name):
     cursor.execute(f"SELECT MAX(id) FROM {table_name};")
     latest_id = cursor.fetchone()[0]
     if latest_id is None:
         latest_id = 0
     return latest_id
+
 
 def migrate_addresses():
     table_name = "addresses"
@@ -123,7 +126,7 @@ def migrate_addresses():
             if (tuple(row) == tuple(data_copy.values())):
                 print(f"SKIP: {data['hash'].hex()}")
                 continue
-                
+
             try:
                 update_query = f"""
                     UPDATE addresses
@@ -154,6 +157,7 @@ def migrate_addresses():
 
     cursor.close()
     connection.close()
+
 
 def migrate_smart_contracts():
     table_name = "smart_contracts"
@@ -190,6 +194,7 @@ def migrate_smart_contracts():
     cursor.close()
     connection.close()
 
+
 def migrate_smart_contracts_additional_sources():
     table_name = "smart_contracts_additional_sources"
     json_filename = f"data/{from_db_port}/{table_name}.json"
@@ -213,14 +218,17 @@ def migrate_smart_contracts_additional_sources():
         data["id"] += latest_id
         data["address_hash"] = bytes.fromhex(data["address_hash"])
 
-    values_to_insert = [tuple(contract.values()) for contract in smart_contracts_additional_sources_data]
-    cursor.executemany(insert_query, values_to_insert)
+    values_to_insert = [
+        tuple(contract.values())
+        for contract in smart_contracts_additional_sources_data]
 
+    cursor.executemany(insert_query, values_to_insert)
     print(f"Inserted {len(smart_contracts_additional_sources_data)} records")
 
     connection.commit()
     cursor.close()
     connection.close()
+
 
 def migrate_address_names():
     table_name = "address_names"
@@ -237,7 +245,9 @@ def migrate_address_names():
 
     insert_query = f"""
         INSERT INTO address_names
-        ({', '.join(['"id"', '"address_hash"', '"name"', '"primary"', '"inserted_at"', '"updated_at"', '"metadata"'])})
+        ({', '.join([
+            f'"{column_name}"' for column_name in address_names_data[0].keys()
+        ])})
         VALUES ({', '.join(['%s'] * len(address_names_data[0]))});
     """
 
@@ -253,6 +263,7 @@ def migrate_address_names():
     connection.commit()
     cursor.close()
     connection.close()
+
 
 def main():
     dump()
