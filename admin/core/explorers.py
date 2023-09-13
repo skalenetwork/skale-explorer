@@ -11,7 +11,7 @@ from admin.configs.nginx import regenerate_nginx_config
 from admin.configs.schains import generate_config
 from admin.core.containers import (get_free_port, restart_nginx,
                                    is_explorer_running, remove_explorer)
-from admin.core.endpoints import is_dkg_passed, get_schain_endpoint
+from admin.core.endpoints import is_dkg_passed, get_schain_endpoint, get_first_block
 from admin.core.verify import verify
 from admin.migrations.revert_reasons import upgrade
 
@@ -23,7 +23,7 @@ def run_explorer(schain_name, endpoint, ws_endpoint):
     explorer_port = schain_meta['port'] if schain_meta else get_free_port()
     db_port = schain_meta['db_port'] if schain_meta else get_free_port()
     scv_port = schain_meta['scv_port'] if schain_meta else get_free_port()
-    first_block = schain_meta['first_block'] if schain_meta else 0
+    first_block = schain_meta['first_block'] if schain_meta else get_first_block(schain_name)
     config_host_path = generate_config(schain_name)
     env = {
         'SCHAIN_NAME': schain_name,

@@ -27,7 +27,7 @@ ETH_API_KEY = os.environ.get('ETH_API_KEY')
 PROXY_DOMAIN_NAME = os.environ.get('PROXY_DOMAIN')
 EXPLORER_VERSION = os.environ.get('VERSION', 'latest')
 SCHAIN_NAMES = os.environ.get('SCHAIN_NAMES')
-STATS_ENABLED = True if os.environ.get('STATS') else False
+FROM_FIRST_BLOCK = True if os.environ.get('FROM_FIRST_BLOCK') else False
 
 SSL_DIR_PATH = os.path.join(SERVER_DATA_DIR, 'certs')
 SSL_CRT_PATH = os.path.join(SSL_DIR_PATH, 'server.crt')
