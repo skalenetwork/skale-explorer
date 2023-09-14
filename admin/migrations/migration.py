@@ -4,6 +4,7 @@ import psycopg2
 import datetime
 from psycopg2.extras import Json
 from decimal import Decimal
+from admin import DUMPS_DIR_PATH
 
 psycopg2.extensions.register_adapter(dict, Json)
 datetime_format = '%Y-%m-%d %H:%M:%S.%f'
@@ -16,7 +17,7 @@ db_params = {
     "user": "postgres"
 }
 
-tables = [
+table_queries = [
     {
         "table_name": "addresses",
         "sql_query": "SELECT * FROM addresses WHERE contract_code IS NOT NULL"
@@ -47,16 +48,20 @@ additional_columns = {
 def dump():
     db_params["port"] = from_db_port
     db_params["database"] = "explorer"
-    connection = psycopg2.connect(**db_params)
+    try:
+        connection = psycopg2.connect(**db_params)
+    except psycopg2.OperationalError:
+        db_params["database"] = "blockscout"
+        connection = psycopg2.connect(**db_params)
     cursor = connection.cursor()
-    for table_info in tables:
+    for table_info in table_queries:
         table_name = table_info["table_name"]
         sql_query = table_info["sql_query"]
         cursor.execute(sql_query)
         rows = cursor.fetchall()
         columns = [desc[0] for desc in cursor.description]
-        print(f"Querying table: {table_name}")
         print(f"Port: {db_params['port']}")
+        print(f"Querying table: {table_name}")
         print(f"Received records: {len(rows)}\n")
         data = []
         for row in rows:
@@ -77,8 +82,7 @@ def dump():
                 item.update(additional_columns)
         if (table_name == "address_names"):
             data = [{"id": i + 1, **entry} for i, entry in enumerate(data)]
-        os.makedirs(f"data/{from_db_port}", exist_ok=True)
-        json_filename = f"data/{from_db_port}/{table_name}.json"
+        json_filename = f"{DUMPS_DIR_PATH}/{table_name}.json"
         with open(json_filename, "w") as json_file:
             json.dump(data, json_file, indent=4)
 
@@ -95,6 +99,7 @@ def get_latest_id(cursor, table_name):
 
 
 def migrate_addresses():
+    print("Migrating addresses")
     table_name = "addresses"
     json_filename = f"data/{from_db_port}/{table_name}.json"
     with open(json_filename, "r") as json_file:
@@ -117,9 +122,9 @@ def migrate_addresses():
 
         if row:
             row = list(row)
-            row[0] = float(row[0])
+            row[0] = float(row[0]) if row[0] is not None else None
             row[2] = row[2].hex()
-            row[3] = row[3].hex()
+            row[3] = row[3].hex() if row[3] is not None else None
             row[4] = row[4].strftime(datetime_format)
             row[5] = row[5].strftime(datetime_format)
 
@@ -160,6 +165,7 @@ def migrate_addresses():
 
 
 def migrate_smart_contracts():
+    print("Migrating smart_contracts")
     table_name = "smart_contracts"
     json_filename = f"data/{from_db_port}/{table_name}.json"
     with open(json_filename, "r") as json_file:
@@ -196,6 +202,7 @@ def migrate_smart_contracts():
 
 
 def migrate_smart_contracts_additional_sources():
+    print("Migrating smart_contracts_additional_sources")
     table_name = "smart_contracts_additional_sources"
     json_filename = f"data/{from_db_port}/{table_name}.json"
     with open(json_filename, "r") as json_file:
@@ -231,6 +238,7 @@ def migrate_smart_contracts_additional_sources():
 
 
 def migrate_address_names():
+    print("Migrating address_names")
     table_name = "address_names"
     json_filename = f"data/{from_db_port}/{table_name}.json"
     with open(json_filename, "r") as json_file:
@@ -267,10 +275,10 @@ def migrate_address_names():
 
 def main():
     dump()
-    migrate_addresses()
-    migrate_smart_contracts()
-    migrate_smart_contracts_additional_sources()
-    migrate_address_names()
+    # migrate_addresses()
+    # migrate_smart_contracts()
+    # migrate_smart_contracts_additional_sources()
+    # migrate_address_names()
 
 
 if __name__ == '__main__':

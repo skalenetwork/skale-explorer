@@ -12,6 +12,7 @@ DOCKER_COMPOSE_CONFIG_PATH = os.path.join(BLOCKSCOUT_PATH,
                                           'docker-compose',
                                           'docker-compose-skale.yml')
 DOCKER_COMPOSE_BIN_PATH = '/usr/local/bin/docker-compose'
+DUMPS_DIR_PATH = os.path.join(SERVER_DATA_DIR, 'dumps')
 
 
 HOST_DIR_PATH = os.environ.get('HOST_DIR_PATH')
