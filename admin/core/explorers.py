@@ -2,11 +2,10 @@ import logging
 import os
 import subprocess
 
-from admin import (EXPLORER_VERSION, DOCKER_COMPOSE_CONFIG_PATH, DOCKER_COMPOSE_BIN_PATH,
+from admin import (DOCKER_COMPOSE_CONFIG_PATH, DOCKER_COMPOSE_BIN_PATH,
                    COMPOSE_HTTP_TIMEOUT)
 from admin.configs.meta import (update_meta_data, get_schain_meta, get_explorers_meta,
-                                set_schain_upgraded, is_current_version, is_schain_upgraded,
-                                verified_contracts)
+                                set_schain_upgraded, is_schain_upgraded, verified_contracts)
 from admin.configs.nginx import regenerate_nginx_config
 from admin.configs.schains import generate_config
 from admin.core.containers import (get_free_port, restart_nginx,
@@ -47,7 +46,7 @@ def run_explorer(schain_name, endpoint, ws_endpoint):
     ]
     subprocess.run(command, env={**env, **os.environ})
     update_meta_data(schain_name, explorer_port, db_port, scv_port,
-                     endpoint, ws_endpoint, EXPLORER_VERSION, first_block)
+                     endpoint, ws_endpoint, first_block)
     regenerate_nginx_config()
     restart_nginx()
     logger.info(f'sChain explorer is running on {schain_name}. subdomain')
@@ -74,7 +73,7 @@ def check_explorer_for_schain(schain_name):
     if schain_name not in explorers:
         run_explorer_for_schain(schain_name)
         set_schain_upgraded(schain_name)
-    if not is_explorer_running(schain_name) or not is_current_version(schain_name):
+    if not is_explorer_running(schain_name):
         if not is_explorer_running(schain_name):
             logger.warning(f'Blockscout is not working for {schain_name}. Recreating...')
         else:

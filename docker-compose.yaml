@@ -14,7 +14,6 @@ services:
       FIRST_SCHAIN_ID: ${FIRST_SCHAIN_ID}
       LAST_SCHAIN_ID: ${LAST_SCHAIN_ID}
       HOST_DIR_PATH: ${HOST_DIR_PATH}
-      VERSION: ${VERSION}
       ETH_API_KEY: ${ETH_API_KEY}
       SCHAIN_NAMES: ${SCHAIN_NAMES}
     volumes:

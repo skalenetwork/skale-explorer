@@ -25,7 +25,6 @@ STATS_NGINX_CONFIG_PATH = os.path.join(NGINX_CONFIGS_DIR, 'stats.conf')
 ENDPOINT = os.environ.get('ETH_ENDPOINT')
 ETH_API_KEY = os.environ.get('ETH_API_KEY')
 PROXY_DOMAIN_NAME = os.environ.get('PROXY_DOMAIN')
-EXPLORER_VERSION = os.environ.get('VERSION', 'latest')
 SCHAIN_NAMES = os.environ.get('SCHAIN_NAMES')
 FROM_FIRST_BLOCK = True if os.environ.get('FROM_FIRST_BLOCK') else False
 
