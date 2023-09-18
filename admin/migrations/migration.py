@@ -1,16 +1,16 @@
 import os
 import json
+import sys
 import psycopg2
 import datetime
 from psycopg2.extras import Json
 from decimal import Decimal
 from admin import DUMPS_DIR_PATH
+from admin.core.containers import get_db_port, check_db_running
+from admin.core.endpoints import get_all_names
 
 psycopg2.extensions.register_adapter(dict, Json)
 datetime_format = '%Y-%m-%d %H:%M:%S.%f'
-
-from_db_port = os.environ["FROM_DB_PORT"]
-to_db_port = os.environ["TO_DB_PORT"]
 
 db_params = {
     "host": "localhost",
@@ -44,9 +44,24 @@ additional_columns = {
     "compiler_settings": []
 }
 
+default_migration_status = {
+    "addresses": False,
+    "address_names": False,
+    "smart_contracts": False,
+    "smart_contracts_additional_sources": False
+}
 
-def dump():
-    db_params["port"] = from_db_port
+
+def get_latest_id(cursor, table_name):
+    cursor.execute(f"SELECT MAX(id) FROM {table_name};")
+    latest_id = cursor.fetchone()[0]
+    if latest_id is None:
+        latest_id = 0
+    return latest_id
+
+
+def dump(schain_name: str):
+    db_params["port"] = get_db_port(schain_name)
     db_params["database"] = "explorer"
     try:
         connection = psycopg2.connect(**db_params)
@@ -60,9 +75,8 @@ def dump():
         cursor.execute(sql_query)
         rows = cursor.fetchall()
         columns = [desc[0] for desc in cursor.description]
-        print(f"Port: {db_params['port']}")
-        print(f"Querying table: {table_name}")
-        print(f"Received records: {len(rows)}\n")
+        print(f"Table: {table_name}")
+        print(f"Received records: {len(rows)}")
         data = []
         for row in rows:
             data_row = []
@@ -82,30 +96,35 @@ def dump():
                 item.update(additional_columns)
         if (table_name == "address_names"):
             data = [{"id": i + 1, **entry} for i, entry in enumerate(data)]
-        json_filename = f"{DUMPS_DIR_PATH}/{table_name}.json"
-        with open(json_filename, "w") as json_file:
-            json.dump(data, json_file, indent=4)
+        os.makedirs(f"{DUMPS_DIR_PATH}/{schain_name}", exist_ok=True)
+        table_file = f"{DUMPS_DIR_PATH}/{schain_name}/{table_name}.json"
+        with open(table_file, "w") as f:
+            json.dump(data, f, indent=4)
+
+    migration_status_file = os.path.join(DUMPS_DIR_PATH, schain_name, "migration_status.json")
+    with open(migration_status_file, "w") as json_file:
+        json.dump(default_migration_status, json_file, indent=4)
 
     cursor.close()
     connection.close()
 
 
-def get_latest_id(cursor, table_name):
-    cursor.execute(f"SELECT MAX(id) FROM {table_name};")
-    latest_id = cursor.fetchone()[0]
-    if latest_id is None:
-        latest_id = 0
-    return latest_id
-
-
-def migrate_addresses():
-    print("Migrating addresses")
+def restore_addresses(schain_name: str):
+    print("Table addresses:")
     table_name = "addresses"
-    json_filename = f"data/{from_db_port}/{table_name}.json"
-    with open(json_filename, "r") as json_file:
-        addresses_data = json.load(json_file)
 
-    db_params["port"] = to_db_port
+    migration_status_file = os.path.join(DUMPS_DIR_PATH, schain_name, "migration_status.json")
+    with open(migration_status_file) as f:
+        migration_status = json.load(f)
+    if (migration_status[table_name]):
+        print("Skipping, already restored")
+        return
+
+    table_file = f"{DUMPS_DIR_PATH}/{schain_name}/{table_name}.json"
+    with open(table_file, "r") as f:
+        addresses_data = json.load(f)
+
+    db_params["port"] = get_db_port(schain_name)
     db_params["database"] = "blockscout"
     connection = psycopg2.connect(**db_params)
     connection.autocommit = False
@@ -115,20 +134,24 @@ def migrate_addresses():
         data_copy = data.copy()
         data["hash"] = bytes.fromhex(data["hash"])
         data["contract_code"] = bytes.fromhex(data["contract_code"])
-        data["fetched_coin_balance"] = Decimal(data["fetched_coin_balance"])
+        if (data["fetched_coin_balance"] is not None):
+            data["fetched_coin_balance"] = Decimal(data["fetched_coin_balance"])
 
         cursor.execute("SELECT * FROM addresses WHERE hash = %s LIMIT 1", (data["hash"],))
         row = cursor.fetchone()
+        columns = [desc[0] for desc in cursor.description]
 
         if row:
-            row = list(row)
-            row[0] = float(row[0]) if row[0] is not None else None
-            row[2] = row[2].hex()
-            row[3] = row[3].hex() if row[3] is not None else None
-            row[4] = row[4].strftime(datetime_format)
-            row[5] = row[5].strftime(datetime_format)
+            row = dict(zip(columns, row))
+            if (row["fetched_coin_balance"] is not None):
+                row["fetched_coin_balance"] = float(row["fetched_coin_balance"])
+            if (row["contract_code"] is not None):
+                row["contract_code"] = row["contract_code"].hex()
+            row["hash"] = row["hash"].hex()
+            row["inserted_at"] = row["inserted_at"].strftime(datetime_format)
+            row["updated_at"] = row["updated_at"].strftime(datetime_format)
 
-            if (tuple(row) == tuple(data_copy.values())):
+            if (row == data_copy):
                 print(f"SKIP: {data['hash'].hex()}")
                 continue
 
@@ -163,15 +186,83 @@ def migrate_addresses():
     cursor.close()
     connection.close()
 
+    migration_status[table_name] = True
+    with open(migration_status_file, 'w') as f:
+        f.write(json.dumps(migration_status, indent=4))
 
-def migrate_smart_contracts():
-    print("Migrating smart_contracts")
+
+def restore_address_names(schain_name: str):
+    print("Table address_names:")
+    table_name = "address_names"
+
+    migration_status_file = os.path.join(DUMPS_DIR_PATH, schain_name, "migration_status.json")
+    with open(migration_status_file) as f:
+        migration_status = json.load(f)
+    if (migration_status[table_name]):
+        print("Skipping, already restored")
+        return
+
+    table_file = f"{DUMPS_DIR_PATH}/{schain_name}/{table_name}.json"
+    with open(table_file, "r") as f:
+        address_names_data = json.load(f)
+
+    if (not address_names_data):
+        print("Skipping, table is empty")
+        return
+
+    db_params["port"] = get_db_port(schain_name)
+    db_params["database"] = "blockscout"
+    connection = psycopg2.connect(**db_params)
+    connection.autocommit = False
+    cursor = connection.cursor()
+    latest_id = get_latest_id(cursor, table_name)
+
+    insert_query = f"""
+        INSERT INTO address_names
+        ({', '.join([
+            f'"{column_name}"' for column_name in address_names_data[0].keys()
+        ])})
+        VALUES ({', '.join(['%s'] * len(address_names_data[0]))});
+    """
+
+    for data in address_names_data:
+        data["id"] += latest_id
+        data["address_hash"] = bytes.fromhex(data["address_hash"])
+
+    values_to_insert = [tuple(contract.values()) for contract in address_names_data]
+    cursor.executemany(insert_query, values_to_insert)
+
+    print(f"Inserted {len(address_names_data)} records")
+
+    connection.commit()
+    cursor.close()
+    connection.close()
+
+    migration_status[table_name] = True
+    with open(migration_status_file, 'w') as f:
+        f.write(json.dumps(migration_status, indent=4))
+
+
+def restore_smart_contracts(schain_name: str):
+    print("Table smart_contracts:")
     table_name = "smart_contracts"
-    json_filename = f"data/{from_db_port}/{table_name}.json"
-    with open(json_filename, "r") as json_file:
-        smart_contracts_data = json.load(json_file)
 
-    db_params["port"] = to_db_port
+    migration_status_file = os.path.join(DUMPS_DIR_PATH, schain_name, "migration_status.json")
+    with open(migration_status_file) as f:
+        migration_status = json.load(f)
+    if (migration_status[table_name]):
+        print("Skipping, already restored")
+        return
+
+    table_file = f"{DUMPS_DIR_PATH}/{schain_name}/{table_name}.json"
+    with open(table_file, "r") as f:
+        smart_contracts_data = json.load(f)
+
+    if (not smart_contracts_data):
+        print("Skipping, table is empty")
+        return
+
+    db_params["port"] = get_db_port(schain_name)
     db_params["database"] = "blockscout"
     connection = psycopg2.connect(**db_params)
     connection.autocommit = False
@@ -200,20 +291,35 @@ def migrate_smart_contracts():
     cursor.close()
     connection.close()
 
+    migration_status[table_name] = True
+    with open(migration_status_file, 'w') as f:
+        f.write(json.dumps(migration_status, indent=4))
 
-def migrate_smart_contracts_additional_sources():
-    print("Migrating smart_contracts_additional_sources")
+
+def restore_smart_contracts_additional_sources(schain_name: str):
+    print("Table smart_contracts_additional_sources:")
     table_name = "smart_contracts_additional_sources"
-    json_filename = f"data/{from_db_port}/{table_name}.json"
-    with open(json_filename, "r") as json_file:
-        smart_contracts_additional_sources_data = json.load(json_file)
 
-    db_params["port"] = to_db_port
+    migration_status_file = os.path.join(DUMPS_DIR_PATH, schain_name, "migration_status.json")
+    with open(migration_status_file) as f:
+        migration_status = json.load(f)
+    if (migration_status[table_name]):
+        print("Skipping, already restored")
+        return
+
+    table_file = f"{DUMPS_DIR_PATH}/{schain_name}/{table_name}.json"
+    with open(table_file, "r") as f:
+        smart_contracts_additional_sources_data = json.load(f)
+
+    if (not smart_contracts_additional_sources_data):
+        print("Skipping, table is empty")
+        return
+
+    db_params["port"] = get_db_port(schain_name)
     db_params["database"] = "blockscout"
     connection = psycopg2.connect(**db_params)
     connection.autocommit = False
     cursor = connection.cursor()
-    latest_id = get_latest_id(cursor, table_name)
 
     insert_query = f"""
         INSERT INTO smart_contracts_additional_sources
@@ -222,7 +328,6 @@ def migrate_smart_contracts_additional_sources():
     """
 
     for data in smart_contracts_additional_sources_data:
-        data["id"] += latest_id
         data["address_hash"] = bytes.fromhex(data["address_hash"])
 
     values_to_insert = [
@@ -236,49 +341,37 @@ def migrate_smart_contracts_additional_sources():
     cursor.close()
     connection.close()
 
+    migration_status[table_name] = True
+    with open(migration_status_file, 'w') as f:
+        f.write(json.dumps(migration_status, indent=4))
 
-def migrate_address_names():
-    print("Migrating address_names")
-    table_name = "address_names"
-    json_filename = f"data/{from_db_port}/{table_name}.json"
-    with open(json_filename, "r") as json_file:
-        address_names_data = json.load(json_file)
 
-    db_params["port"] = to_db_port
-    db_params["database"] = "blockscout"
-    connection = psycopg2.connect(**db_params)
-    connection.autocommit = False
-    cursor = connection.cursor()
-    latest_id = get_latest_id(cursor, table_name)
+def dump_all():
+    schain_names = get_all_names()
+    for schain_name in schain_names:
+        if check_db_running(schain_name):
+            print("-" * 50)
+            print(f"Dumping schain: {schain_name}")
+            dump(schain_name)
 
-    insert_query = f"""
-        INSERT INTO address_names
-        ({', '.join([
-            f'"{column_name}"' for column_name in address_names_data[0].keys()
-        ])})
-        VALUES ({', '.join(['%s'] * len(address_names_data[0]))});
-    """
 
-    for data in address_names_data:
-        data["id"] += latest_id
-        data["address_hash"] = bytes.fromhex(data["address_hash"])
-
-    values_to_insert = [tuple(contract.values()) for contract in address_names_data]
-    cursor.executemany(insert_query, values_to_insert)
-
-    print(f"Inserted {len(address_names_data)} records")
-
-    connection.commit()
-    cursor.close()
-    connection.close()
+def restore_all():
+    schain_names = get_all_names()
+    for schain_name in schain_names:
+        if check_db_running(schain_name):
+            print("-" * 50)
+            print(f"Restoring schain {schain_name}")
+            restore_addresses(schain_name)
+            restore_address_names(schain_name)
+            restore_smart_contracts(schain_name)
+            restore_smart_contracts_additional_sources(schain_name)
 
 
 def main():
-    dump()
-    # migrate_addresses()
-    # migrate_smart_contracts()
-    # migrate_smart_contracts_additional_sources()
-    # migrate_address_names()
+    if (sys.argv[1] == "dump"):
+        dump_all()
+    elif (sys.argv[1] == "restore"):
+        restore_all()
 
 
 if __name__ == '__main__':

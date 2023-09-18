@@ -92,3 +92,8 @@ def check_db_exists(schain_name):
         return True
     except docker.errors.NotFound:
         return False
+
+
+def check_db_running(schain_name):
+    container_name = f'postgres_{schain_name}'
+    return get_info(container_name) == RUNNING_STATUS
