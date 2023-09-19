@@ -3,7 +3,7 @@ import os
 import subprocess
 
 from admin import (DOCKER_COMPOSE_CONFIG_PATH, DOCKER_COMPOSE_BIN_PATH,
-                   COMPOSE_HTTP_TIMEOUT)
+                   COMPOSE_HTTP_TIMEOUT, BLOCKSCOUT_DATA_DIR)
 from admin.configs.meta import (update_meta_data, get_schain_meta, get_explorers_meta,
                                 set_schain_upgraded, is_schain_upgraded, verified_contracts)
 from admin.configs.nginx import regenerate_nginx_config
@@ -24,6 +24,7 @@ def run_explorer(schain_name, endpoint, ws_endpoint):
     scv_port = schain_meta['scv_port'] if schain_meta else get_free_port()
     first_block = schain_meta['first_block'] if schain_meta else get_first_block(schain_name)
     config_host_path = generate_config(schain_name)
+    blockscout_data_dir = f'{BLOCKSCOUT_DATA_DIR}/{schain_name}'
     env = {
         'SCHAIN_NAME': schain_name,
         'PORT': str(explorer_port),
@@ -34,7 +35,8 @@ def run_explorer(schain_name, endpoint, ws_endpoint):
         'CONFIG_PATH': config_host_path,
         'COMPOSE_PROJECT_NAME': schain_name,
         'COMPOSE_HTTP_TIMEOUT': str(COMPOSE_HTTP_TIMEOUT),
-        'FIRST_BLOCK': str(first_block)
+        'FIRST_BLOCK': str(first_block),
+        'SCHAIN_DATA_DIR': blockscout_data_dir
     }
     logger.info(f'Running explorer with {env}')
     command = [
