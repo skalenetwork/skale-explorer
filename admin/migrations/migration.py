@@ -23,20 +23,20 @@ table_queries = [
         "sql_query": "SELECT * FROM addresses WHERE contract_code IS NOT NULL"
     },
     {
+        "table_name": "address_names",
+        "sql_query": "SELECT * FROM address_names ORDER by inserted_at"
+    },
+    {
         "table_name": "smart_contracts",
         "sql_query": "SELECT * FROM smart_contracts ORDER BY id"
     },
     {
         "table_name": "smart_contracts_additional_sources",
         "sql_query": "SELECT * FROM smart_contracts_additional_sources ORDER BY id"
-    },
-    {
-        "table_name": "address_names",
-        "sql_query": "SELECT * FROM address_names"
     }
 ]
 
-additional_columns = {
+additional_columns_for_smart_contracts = {
     "contract_code_md5": "",
     "implementation_name": None,
     "implementation_address_hash": None,
@@ -93,9 +93,7 @@ def dump(schain_name: str):
 
         if (table_name == "smart_contracts"):
             for item in data:
-                item.update(additional_columns)
-        if (table_name == "address_names"):
-            data = [{"id": i + 1, **entry} for i, entry in enumerate(data)]
+                item.update(additional_columns_for_smart_contracts)
         os.makedirs(f"{DUMPS_DIR_PATH}/{schain_name}", exist_ok=True)
         table_file = f"{DUMPS_DIR_PATH}/{schain_name}/{table_name}.json"
         with open(table_file, "w") as f:
@@ -225,10 +223,16 @@ def restore_address_names(schain_name: str):
         VALUES ({', '.join(['%s'] * len(address_names_data[0]))});
     """
 
+    modified_address_names_data = []
     for data in address_names_data:
-        data["id"] += latest_id
         data["address_hash"] = bytes.fromhex(data["address_hash"])
-
+        cursor.execute("SELECT * FROM address_names WHERE address_hash = %s LIMIT 1", (data["address_hash"],))
+        row = cursor.fetchone()
+        if row is None:
+            latest_id += 1
+            data["id"] = latest_id
+            modified_address_names_data.append(data)
+    address_names_data = modified_address_names_data
     values_to_insert = [tuple(contract.values()) for contract in address_names_data]
     cursor.executemany(insert_query, values_to_insert)
 
