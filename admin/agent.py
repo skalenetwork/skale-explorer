@@ -22,7 +22,7 @@ def daemon(delay=60):
                 try:
                     func(*args, **kwargs)
                 except Exception as e:
-                    logger.warning(f'{func.__name__} failed with: {e}')
+                    logger.exception(f'{func.__name__} failed with: {e}')
                     logger.warning(f'Restarting {func.__name__}...')
                 sleep(delay)
         return wrapper
