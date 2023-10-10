@@ -1,6 +1,7 @@
 import os
 import json
 import sys
+import re
 import time
 import shutil
 import datetime
@@ -24,7 +25,10 @@ db_params = {
 table_queries = [
     {
         "table_name": "addresses",
-        "sql_query": "SELECT * FROM addresses WHERE contract_code IS NOT NULL"
+        # "sql_query": """SELECT * FROM addresses WHERE contract_code IS NOT NULL UNION
+        #                 SELECT a.* FROM addresses a INNER JOIN tokens t ON a.hash = t.contract_address_hash"""
+        "sql_query": "SELECT * FROM addresses ORDER by hash"
+
     },
     {
         "table_name": "address_names",
@@ -37,6 +41,15 @@ table_queries = [
     {
         "table_name": "smart_contracts_additional_sources",
         "sql_query": "SELECT * FROM smart_contracts_additional_sources ORDER BY id"
+    },
+    {
+        "table_name": "blocks",
+        "sql_query": "SELECT * FROM blocks ORDER BY number DESC"
+    },
+    {
+        "table_name": "transactions",
+        "sql_query": "SELECT * FROM transactions ORDER BY hash"
+        #    "sql_query": "SELECT t.* FROM transactions t INNER JOIN token_transfers tt ON t.hash = tt.transaction_hash"
     },
     {
         "table_name": "tokens",
@@ -62,6 +75,10 @@ def is_list_of_decimals(value):
         return all(isinstance(item, Decimal) for item in value)
     return False
 
+def split_string(s):
+    parts = re.split(r'(\d+)', s)
+    parts = [int(part) if part.isdigit() else part for part in parts]
+    return parts
 
 def get_latest_id(cursor, table_name):
     cursor.execute(f"SELECT MAX(id) FROM {table_name};")
@@ -71,31 +88,29 @@ def get_latest_id(cursor, table_name):
     return latest_id
 
 def get_number_of_rows(cursor, table_name):
-    if (table_name == "addresses"):
-        cursor.execute(f"SELECT COUNT(*) FROM {table_name} WHERE contract_code IS NOT NULL")
-    else:
-        cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
+    cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
     row_count = cursor.fetchone()[0]
     return row_count
 
-def paginate_query(cursor, sql_query, number_of_rows):
-    current_page = 1
-    all_rows = []
+def paginate_query(cursor, sql_query, table_name):
+    current_page = 0
+    number_of_rows = get_number_of_rows(cursor, table_name)
     while True:
         paginated_query = sql_query + f"""
             LIMIT {chunk_size}
-            OFFSET {(current_page - 1) * chunk_size};
+            OFFSET {current_page * chunk_size} + (SELECT COUNT(*) FROM {table_name}) - {number_of_rows};
         """
         cursor.execute(paginated_query)
         rows = cursor.fetchall()
         if not rows:
             break
-        all_rows += rows
+        yield rows
         current_page += 1
-        print(f"Percentage complete: {round(len(all_rows) * 100 / number_of_rows, 1)}" + " " * 5, end='\r')
+        completeness = round(chunk_size * current_page * 100 / number_of_rows, 1)
+        completeness = completeness if completeness < 100 else 100
+        print(f"Percentage complete: {completeness}" + " " * 5, end='\r')
         time.sleep(5)
     print()
-    return all_rows
 
 
 def migration_status_decorator(func):
@@ -104,7 +119,7 @@ def migration_status_decorator(func):
         with open(migration_status_file) as f:
             migration_status = json.load(f)
         if migration_status[table_name]:
-            print(f"Table {table_name}: Skipping, already restored")
+            print(f"Table {table_name}:\nSkipping, already restored")
             return
 
         result = func(schain_name, table_name, *args, **kwargs)
@@ -116,23 +131,9 @@ def migration_status_decorator(func):
     return wrapper
 
 
-def dump_in_chunks(schain_dump_dir, table_name, data):
-    table_dir = os.path.join(schain_dump_dir, table_name)
-    if os.path.exists(table_dir):
-        shutil.rmtree(table_dir)
-    os.makedirs(table_dir)
-
-    for i, chunk in enumerate(split_data(data, chunk_size)):
-        table_file = os.path.join(table_dir, f"{table_name}_{i}.json")
-        with open(table_file, "w") as f:
-            json.dump(chunk, f, indent=4)
-
-def split_data(data, chunk_size):
-    for i in range(0, len(data), chunk_size):
-        yield data[i:i + chunk_size]
-
-
 def dump(schain_name: str):
+    schain_dump_dir = os.path.join(DUMPS_DIR_PATH, schain_name)
+    os.makedirs(schain_dump_dir, exist_ok=True)
     db_params["port"] = get_db_port(schain_name)
     try:
         connection = psycopg2.connect(**db_params)
@@ -143,34 +144,40 @@ def dump(schain_name: str):
     for table_info in table_queries:
         table_name = table_info["table_name"]
         sql_query = table_info["sql_query"]
-        print(f"Table: {table_name}")
+        table_dir = os.path.join(schain_dump_dir, table_name)
+        if os.path.exists(table_dir):
+            shutil.rmtree(table_dir)
+        os.makedirs(table_dir)
         number_of_rows = get_number_of_rows(cursor, table_name)
+        print(f"Table: {table_name}")
         print(f"Number of rows: {number_of_rows}")
-        rows = paginate_query(cursor, sql_query, number_of_rows)
-        columns = [desc[0] for desc in cursor.description]
-        data = []
-        for row in rows:
-            formatted_rows = []
-            for value in row:
-                if isinstance(value, memoryview):
-                    formatted_rows.append(value.hex())
-                elif isinstance(value, datetime.datetime):
-                    formatted_rows.append(value.strftime(datetime_format))
-                elif isinstance(value, Decimal):
-                    formatted_rows.append(float(value))
-                elif is_list_of_decimals(value):
-                    formatted_rows.append([float(element) for element in value])
-                else:
-                    formatted_rows.append(value)
-            data.append(dict(zip(columns, formatted_rows)))
+        for i, rows in enumerate(paginate_query(cursor, sql_query, table_name)):
+            columns = [desc[0] for desc in cursor.description]
+            data = []
+            for row in rows:
+                formatted_data = []
+                for value in row:
+                    if isinstance(value, memoryview):
+                        formatted_data.append(value.hex())
+                    elif isinstance(value, datetime.datetime):
+                        formatted_data.append(value.strftime(datetime_format))
+                    elif isinstance(value, Decimal):
+                        formatted_data.append(float(value))
+                    elif is_list_of_decimals(value):
+                        formatted_data.append([float(item) for item in value])
+                    else:
+                        formatted_data.append(value)
+                data.append(dict(zip(columns, formatted_data)))
 
-        if (table_name == "smart_contracts"):
-            for item in data:
-                if not all(key in item for key in additional_columns_for_smart_contracts.keys()):
-                    item.update(additional_columns_for_smart_contracts)
-        schain_dump_dir = os.path.join(DUMPS_DIR_PATH, schain_name)
-        os.makedirs(schain_dump_dir, exist_ok=True)
-        dump_in_chunks(schain_dump_dir, table_name, data)
+            if (table_name == "smart_contracts"):
+                for item in data:
+                    if not all(key in item for key in additional_columns_for_smart_contracts.keys()):
+                        item.update(additional_columns_for_smart_contracts)
+
+            table_file = os.path.join(table_dir, f"{table_name}_{i+1}.json")
+            with open(table_file, "w") as f:
+                json.dump(data, f, indent=4)
+
     default_migration_status = {q["table_name"]: False for q in table_queries}
     migration_status_file = os.path.join(DUMPS_DIR_PATH, schain_name, "migration_status.json")
     with open(migration_status_file, "w") as f:
@@ -183,7 +190,7 @@ def dump(schain_name: str):
 def restore_addresses(schain_name: str, table_name):
     print("Table addresses:")
 
-    table_file = os.path.join(DUMPS_DIR_PATH, schain_name, table_name, f"{table_name}_0.json")
+    table_file = os.path.join(DUMPS_DIR_PATH, schain_name, table_name, f"{table_name}_1.json")
     with open(table_file, "r") as f:
         addresses_data = json.load(f)
 
@@ -196,7 +203,8 @@ def restore_addresses(schain_name: str, table_name):
     for data in addresses_data:
         data_copy = data.copy()
         data["hash"] = bytes.fromhex(data["hash"])
-        data["contract_code"] = bytes.fromhex(data["contract_code"])
+        if (data["contract_code"] is not None):
+            data["contract_code"] = bytes.fromhex(data["contract_code"])
         if (data["fetched_coin_balance"] is not None):
             data["fetched_coin_balance"] = Decimal(data["fetched_coin_balance"])
 
@@ -251,7 +259,8 @@ def restore_addresses(schain_name: str, table_name):
 
 
 @migration_status_decorator
-def restore_table(schain_name, table_name, db_params, transform_func=None):
+def restore_table(schain_name, table_name, transform_func=None):
+    print(f"Table {table_name}:")
     db_params["port"] = get_db_port(schain_name)
     connection = psycopg2.connect(**db_params)
     connection.autocommit = False
@@ -259,27 +268,34 @@ def restore_table(schain_name, table_name, db_params, transform_func=None):
     cursor.execute("BEGIN")
 
     table_dir_path = os.path.join(DUMPS_DIR_PATH, schain_name, table_name)
-    table_files = os.listdir(table_dir_path)
-    for table_file in table_files:
+    table_files = sorted(os.listdir(table_dir_path), key=split_string)
+    for index, table_file in enumerate(table_files):
         table_file_dir = os.path.join(table_dir_path, table_file)
         with open(table_file_dir, "r") as f:
             table_data = json.load(f)
 
         if not table_data:
-            print(f"Table {table_name}: Skipping, table is empty")
+            print("Skipping, table is empty")
             cursor.close()
             connection.close()
             return
 
         if transform_func:
             table_data = transform_func(table_data, cursor)
-
+            if not table_data:
+                print("Skipping, nothing to insert")
+                cursor.close()
+                connection.close()
+                return
+        
+        column_names = table_data[0].keys()
         insert_query = f"""
             INSERT INTO {table_name}
             ({', '.join([
-                f'"{column_name}"' for column_name in table_data[0].keys()
+                f'"{column_name}"' for column_name in column_names
             ])})
-            VALUES ({', '.join(['%s'] * len(table_data[0]))});
+            VALUES ({', '.join(['%s'] * len(table_data[0]))})
+            {on_conflict_sql(table_name, column_names)}
         """
 
         values_to_insert = [tuple(row.values()) for row in table_data]
@@ -291,13 +307,29 @@ def restore_table(schain_name, table_name, db_params, transform_func=None):
             connection.close()
             print(f"Error: {e}")
             exit()
+        completeness = round((index + 1) * 100 / len(table_files), 1)
+        print(f"Percentage complete: {completeness}" + " " * 5, end='\r')
         time.sleep(5)
 
-    print(f"Table {table_name}: Inserted {len(table_data)} records")
-
+    print()
     connection.commit()
     cursor.close()
     connection.close()
+
+def on_conflict_sql(table_name, column_names):
+    if table_name == "addresses":
+        return f"""ON CONFLICT ON CONSTRAINT addresses_pkey DO UPDATE
+            SET {', '.join([f"{column_name} = EXCLUDED.{column_name}" for column_name in column_names])};"""
+    return ""
+
+def transform_addresses(table_data, cursor=None):
+    for item in table_data:
+        item["hash"] = bytes.fromhex(item["hash"])
+        if (item["contract_code"] is not None):
+            item["contract_code"] = bytes.fromhex(item["contract_code"])
+        if (item["fetched_coin_balance"] is not None):
+            item["fetched_coin_balance"] = Decimal(item["fetched_coin_balance"])
+    return table_data
 
 
 def transform_smart_contracts(table_data, cursor=None):
@@ -310,6 +342,7 @@ def transform_smart_contracts(table_data, cursor=None):
 
 def transform_address_names(table_data, cursor):
     latest_id = get_latest_id(cursor, "address_names")
+    transformed_data = []
     for item in table_data:
         item["address_hash"] = bytes.fromhex(item["address_hash"])
         cursor.execute("SELECT * FROM address_names WHERE address_hash = %s LIMIT 1", (item["address_hash"],))
@@ -317,13 +350,65 @@ def transform_address_names(table_data, cursor):
         if row is None:
             latest_id += 1
             item["id"] = latest_id
-    return table_data
+            transformed_data.append(item)
+    return transformed_data
 
 def transform_smart_contracts_additional_sources(table_data, cursor=None):
     for item in table_data:
         item["address_hash"] = bytes.fromhex(item["address_hash"])
     return table_data
 
+def transform_blocks(table_data, cursor=None):
+    for item in table_data:
+        item["difficulty"] = Decimal(item["difficulty"])
+        item["gas_limit"] = Decimal(item["gas_limit"])
+        item["gas_used"] = Decimal(item["gas_used"])
+        item["total_difficulty"] = Decimal(item["total_difficulty"])
+        item["hash"] = bytes.fromhex(item["hash"])
+        item["miner_hash"] = bytes.fromhex(item["miner_hash"])
+        item["parent_hash"] = bytes.fromhex(item["parent_hash"])
+    return table_data
+
+def transform_transactions(table_data, cursor=None):
+    for item in table_data:
+        item["cumulative_gas_used"] = Decimal(item["cumulative_gas_used"])
+        item["gas"] = Decimal(item["gas"])
+        item["gas_price"] = Decimal(item["gas_price"])
+        item["gas_used"] = Decimal(item["gas_used"])
+        item["hash"] = bytes.fromhex(item["hash"])
+        item["input"] = bytes.fromhex(item["input"])
+        item["r"] = Decimal(item["r"])
+        item["s"] = Decimal(item["s"])
+        item["v"] = Decimal(item["v"])
+        item["value"] = Decimal(item["value"])
+        item["block_hash"] = bytes.fromhex(item["block_hash"])
+        item["from_address_hash"] = bytes.fromhex(item["from_address_hash"])
+        if item["to_address_hash"] is not None:
+            item["to_address_hash"] = bytes.fromhex(item["to_address_hash"])
+    return table_data
+
+
+def transform_tokens(table_data, cursor=None):
+    for item in table_data:
+        item["contract_address_hash"] = bytes.fromhex(item["contract_address_hash"])
+        if  item["total_supply"] is not None:
+            item["total_supply"] = Decimal(item["total_supply"])
+        if  item["decimals"] is not None:
+            item["decimals"] = Decimal(item["decimals"])
+    return table_data
+
+def transform_token_transfers(table_data, cursor=None):
+    for item in table_data:
+        item["transaction_hash"] = bytes.fromhex(item["transaction_hash"])
+        item["from_address_hash"] = bytes.fromhex(item["from_address_hash"])
+        item["to_address_hash"] = bytes.fromhex(item["to_address_hash"])
+        item["token_contract_address_hash"] = bytes.fromhex(item["token_contract_address_hash"])
+        item["block_hash"] = bytes.fromhex(item["block_hash"])
+        if item["amount"] is not None:
+            item["amount"] = Decimal(item["amount"])
+        if item["token_ids"] is not None:
+            item["token_ids"] = [Decimal(token_id) for token_id in item["token_ids"]]
+    return table_data
 
 def dump_all():
     schain_names = get_all_names()
@@ -340,10 +425,14 @@ def restore_all():
         if check_db_running(schain_name):
             print("-" * 50)
             print(f"Restoring schain {schain_name}")
-            restore_addresses(schain_name, "addresses")
-            restore_table(schain_name, "address_names", db_params, transform_func=transform_address_names)
-            restore_table(schain_name, "smart_contracts", db_params, transform_smart_contracts)
-            restore_table(schain_name, "smart_contracts_additional_sources", db_params, transform_smart_contracts_additional_sources)
+            restore_table(schain_name, "addresses", transform_addresses)
+            restore_table(schain_name, "address_names", transform_address_names)
+            restore_table(schain_name, "smart_contracts", transform_smart_contracts)
+            restore_table(schain_name, "smart_contracts_additional_sources", transform_smart_contracts_additional_sources)
+            restore_table(schain_name, "blocks", transform_blocks)
+            restore_table(schain_name, "transactions", transform_transactions)
+            restore_table(schain_name, "tokens", transform_tokens)
+            restore_table(schain_name, "token_transfers", transform_token_transfers)
 
 
 def main():
