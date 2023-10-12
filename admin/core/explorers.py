@@ -10,14 +10,14 @@ from admin.configs.nginx import regenerate_nginx_config
 from admin.configs.schains import generate_config
 from admin.core.containers import (get_free_port, restart_nginx,
                                    is_explorer_running, remove_explorer)
-from admin.core.endpoints import is_dkg_passed, get_schain_endpoint, get_first_block
+from admin.core.endpoints import is_dkg_passed, get_schain_endpoint, get_first_block, get_chain_id
 from admin.core.verify import verify
 from admin.migrations.revert_reasons import upgrade
 
 logger = logging.getLogger(__name__)
 
 
-def run_explorer(schain_name, endpoint, ws_endpoint):
+def run_explorer(schain_name, chain_id, endpoint, ws_endpoint):
     schain_meta = get_schain_meta(schain_name)
     explorer_port = schain_meta['port'] if schain_meta else get_free_port()
     db_port = schain_meta['db_port'] if schain_meta else get_free_port()
@@ -27,6 +27,7 @@ def run_explorer(schain_name, endpoint, ws_endpoint):
     blockscout_data_dir = f'{BLOCKSCOUT_DATA_DIR}/{schain_name}'
     env = {
         'SCHAIN_NAME': schain_name,
+        'CHAIN_ID': str(chain_id),
         'PORT': str(explorer_port),
         'DB_PORT': str(db_port),
         'SC_VERIFIER_PORT': str(scv_port),
@@ -62,8 +63,9 @@ def run_explorer_for_schain(schain_name):
     else:
         endpoint = get_schain_endpoint(schain_name)
         ws_endpoint = get_schain_endpoint(schain_name, ws=True)
+    chain_id = get_chain_id(schain_name)
     if endpoint and ws_endpoint:
-        run_explorer(schain_name, endpoint, ws_endpoint)
+        run_explorer(schain_name, chain_id, endpoint, ws_endpoint)
     else:
         logger.warning(f"Couldn't create blockexplorer instance for {schain_name}")
 

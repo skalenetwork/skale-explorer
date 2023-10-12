@@ -164,6 +164,12 @@ def get_first_block(schain_name):
     return w3.eth.get_block_number()
 
 
+def get_chain_id(schain_name):
+    endpoint = get_schain_endpoint(schain_name)
+    w3 = Web3(HTTPProvider(endpoint))
+    return w3.eth.chain_id
+
+
 def get_schain_endpoint(schain_name, ws=False):
     proxy = get_proxy_endpoint(schain_name, ws)
     if check_endpoint(proxy, ws):
