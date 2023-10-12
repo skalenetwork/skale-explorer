@@ -25,8 +25,6 @@ db_params = {
 table_queries = [
     {
         "table_name": "addresses",
-        # "sql_query": """SELECT * FROM addresses WHERE contract_code IS NOT NULL UNION
-        #                 SELECT a.* FROM addresses a INNER JOIN tokens t ON a.hash = t.contract_address_hash"""
         "sql_query": "SELECT * FROM addresses ORDER by hash"
 
     },
@@ -49,7 +47,6 @@ table_queries = [
     {
         "table_name": "transactions",
         "sql_query": "SELECT * FROM transactions ORDER BY hash"
-        #    "sql_query": "SELECT t.* FROM transactions t INNER JOIN token_transfers tt ON t.hash = tt.transaction_hash"
     },
     {
         "table_name": "tokens",
@@ -58,6 +55,10 @@ table_queries = [
     {
         "table_name": "token_transfers",
         "sql_query": "SELECT * FROM token_transfers ORDER BY transaction_hash"
+    },
+    {
+        "table_name": "address_current_token_balances",
+        "sql_query": "SELECT * FROM address_current_token_balances ORDER BY id"
     }
 ]
 
@@ -186,77 +187,6 @@ def dump(schain_name: str):
     cursor.close()
     connection.close()
 
-@migration_status_decorator
-def restore_addresses(schain_name: str, table_name):
-    print("Table addresses:")
-
-    table_file = os.path.join(DUMPS_DIR_PATH, schain_name, table_name, f"{table_name}_1.json")
-    with open(table_file, "r") as f:
-        addresses_data = json.load(f)
-
-    db_params["port"] = get_db_port(schain_name)
-    db_params["database"] = "blockscout"
-    connection = psycopg2.connect(**db_params)
-    connection.autocommit = False
-    cursor = connection.cursor()
-
-    for data in addresses_data:
-        data_copy = data.copy()
-        data["hash"] = bytes.fromhex(data["hash"])
-        if (data["contract_code"] is not None):
-            data["contract_code"] = bytes.fromhex(data["contract_code"])
-        if (data["fetched_coin_balance"] is not None):
-            data["fetched_coin_balance"] = Decimal(data["fetched_coin_balance"])
-
-        cursor.execute("SELECT * FROM addresses WHERE hash = %s LIMIT 1", (data["hash"],))
-        row = cursor.fetchone()
-        columns = [desc[0] for desc in cursor.description]
-
-        if row:
-            row = dict(zip(columns, row))
-            if (row["fetched_coin_balance"] is not None):
-                row["fetched_coin_balance"] = float(row["fetched_coin_balance"])
-            if (row["contract_code"] is not None):
-                row["contract_code"] = row["contract_code"].hex()
-            row["hash"] = row["hash"].hex()
-            row["inserted_at"] = row["inserted_at"].strftime(datetime_format)
-            row["updated_at"] = row["updated_at"].strftime(datetime_format)
-
-            if (row == data_copy):
-                print(f"SKIP: {data['hash'].hex()}")
-                continue
-
-            try:
-                update_query = f"""
-                    UPDATE addresses
-                    SET {', '.join([f"{column} = %s" for column in data.keys()])}
-                    WHERE hash = %s
-                """
-                update_values = list(data.values()) + [data["hash"]]
-                cursor.execute(update_query, update_values)
-                connection.commit()
-                print(f"UPDATE: {data['hash'].hex()}")
-                continue
-            except Exception as e:
-                connection.rollback()
-                print(e)
-
-        try:
-            insert_query = f"""
-                INSERT INTO addresses
-                ({', '.join(data.keys())})
-                VALUES ({', '.join(['%s'] * len(data))});
-            """
-            cursor.execute(insert_query, tuple(data.values()))
-            connection.commit()
-            print(f"INSERT: {data['hash'].hex()}")
-        except Exception as e:
-            connection.rollback()
-            print(e)
-
-    cursor.close()
-    connection.close()
-
 
 @migration_status_decorator
 def restore_table(schain_name, table_name, transform_func=None):
@@ -317,8 +247,9 @@ def restore_table(schain_name, table_name, transform_func=None):
     connection.close()
 
 def on_conflict_sql(table_name, column_names):
-    if table_name == "addresses":
-        return f"""ON CONFLICT ON CONSTRAINT addresses_pkey DO UPDATE
+    if table_name == "addresses" or table_name == "blocks" or table_name == "transactions" \
+        or table_name == "tokens" or table_name == "token_transfers":
+        return f"""ON CONFLICT ON CONSTRAINT {table_name}_pkey DO UPDATE
             SET {', '.join([f"{column_name} = EXCLUDED.{column_name}" for column_name in column_names])};"""
     return ""
 
@@ -366,6 +297,7 @@ def transform_blocks(table_data, cursor=None):
         item["total_difficulty"] = Decimal(item["total_difficulty"])
         item["hash"] = bytes.fromhex(item["hash"])
         item["miner_hash"] = bytes.fromhex(item["miner_hash"])
+        item["nonce"] = bytes.fromhex(item["nonce"])
         item["parent_hash"] = bytes.fromhex(item["parent_hash"])
     return table_data
 
@@ -385,11 +317,16 @@ def transform_transactions(table_data, cursor=None):
         item["from_address_hash"] = bytes.fromhex(item["from_address_hash"])
         if item["to_address_hash"] is not None:
             item["to_address_hash"] = bytes.fromhex(item["to_address_hash"])
+        if item["created_contract_address_hash"] is not None:
+            item["created_contract_address_hash"] = bytes.fromhex(item["created_contract_address_hash"])
+        if item["old_block_hash"] is not None:
+            item["old_block_hash"] = bytes.fromhex(item["old_block_hash"])
     return table_data
 
 
 def transform_tokens(table_data, cursor=None):
     for item in table_data:
+        del item["bridged"]
         item["contract_address_hash"] = bytes.fromhex(item["contract_address_hash"])
         if  item["total_supply"] is not None:
             item["total_supply"] = Decimal(item["total_supply"])
@@ -409,6 +346,24 @@ def transform_token_transfers(table_data, cursor=None):
         if item["token_ids"] is not None:
             item["token_ids"] = [Decimal(token_id) for token_id in item["token_ids"]]
     return table_data
+
+def update_sequences(schain_name):
+    db_params["port"] = get_db_port(schain_name)
+    connection = psycopg2.connect(**db_params)
+    connection.autocommit = True
+    cursor = connection.cursor()
+    cursor.execute("SELECT SETVAL('address_names_id_seq', (SELECT MAX(id) FROM address_names));")
+    cursor.execute("SELECT SETVAL('smart_contracts_id_seq', (SELECT MAX(id) FROM smart_contracts));")
+    cursor.execute(
+        "SELECT SETVAL('address_current_token_balances_id_seq', "
+        "(SELECT MAX(id) FROM address_current_token_balances));"
+    )
+    cursor.execute(
+        "SELECT SETVAL('smart_contracts_additional_sources_id_seq', "
+        "(SELECT MAX(id) FROM smart_contracts_additional_sources));"
+    )
+    cursor.close()
+    connection.close()
 
 def dump_all():
     schain_names = get_all_names()
@@ -433,6 +388,7 @@ def restore_all():
             restore_table(schain_name, "transactions", transform_transactions)
             restore_table(schain_name, "tokens", transform_tokens)
             restore_table(schain_name, "token_transfers", transform_token_transfers)
+            update_sequences(schain_name)
 
 
 def main():
