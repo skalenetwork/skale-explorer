@@ -14,7 +14,7 @@ from admin.core.endpoints import get_all_names
 
 psycopg2.extensions.register_adapter(dict, Json)
 datetime_format = '%Y-%m-%d %H:%M:%S.%f'
-chunk_size = 50000
+chunk_size = 10000
 
 db_params = {
     "host": "localhost",
@@ -76,10 +76,12 @@ def is_list_of_decimals(value):
         return all(isinstance(item, Decimal) for item in value)
     return False
 
+
 def split_string(s):
     parts = re.split(r'(\d+)', s)
     parts = [int(part) if part.isdigit() else part for part in parts]
     return parts
+
 
 def get_latest_id(cursor, table_name):
     cursor.execute(f"SELECT MAX(id) FROM {table_name};")
@@ -88,10 +90,12 @@ def get_latest_id(cursor, table_name):
         latest_id = 0
     return latest_id
 
+
 def get_number_of_rows(cursor, table_name):
     cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
     row_count = cursor.fetchone()[0]
     return row_count
+
 
 def paginate_query(cursor, sql_query, table_name):
     current_page = 0
@@ -99,7 +103,9 @@ def paginate_query(cursor, sql_query, table_name):
     while True:
         paginated_query = sql_query + f"""
             LIMIT {chunk_size}
-            OFFSET {current_page * chunk_size} + (SELECT COUNT(*) FROM {table_name}) - {number_of_rows};
+            OFFSET {current_page * chunk_size} + (
+                SELECT COUNT(*) FROM {table_name}
+            ) - {number_of_rows};
         """
         cursor.execute(paginated_query)
         rows = cursor.fetchall()
@@ -172,7 +178,10 @@ def dump(schain_name: str):
 
             if (table_name == "smart_contracts"):
                 for item in data:
-                    if not all(key in item for key in additional_columns_for_smart_contracts.keys()):
+                    if not all(
+                        key in item
+                        for key in additional_columns_for_smart_contracts.keys()
+                    ):
                         item.update(additional_columns_for_smart_contracts)
 
             table_file = os.path.join(table_dir, f"{table_name}_{i+1}.json")
@@ -217,7 +226,7 @@ def restore_table(schain_name, table_name, transform_func=None):
                 cursor.close()
                 connection.close()
                 return
-        
+
         column_names = table_data[0].keys()
         insert_query = f"""
             INSERT INTO {table_name}
@@ -227,7 +236,6 @@ def restore_table(schain_name, table_name, transform_func=None):
             VALUES ({', '.join(['%s'] * len(table_data[0]))})
             {on_conflict_sql(table_name, column_names)}
         """
-
         values_to_insert = [tuple(row.values()) for row in table_data]
         try:
             cursor.executemany(insert_query, values_to_insert)
@@ -246,12 +254,16 @@ def restore_table(schain_name, table_name, transform_func=None):
     cursor.close()
     connection.close()
 
+
 def on_conflict_sql(table_name, column_names):
-    if table_name == "addresses" or table_name == "blocks" or table_name == "transactions" \
-        or table_name == "tokens" or table_name == "token_transfers":
+    if table_name == "addresses" or table_name == "blocks" or table_name == "smart_contracts" \
+            or table_name == "tokens" or table_name == "token_transfers" \
+            or table_name == "transactions" or table_name == "smart_contracts_additional_sources":
         return f"""ON CONFLICT ON CONSTRAINT {table_name}_pkey DO UPDATE
-            SET {', '.join([f"{column_name} = EXCLUDED.{column_name}" for column_name in column_names])};"""
+            SET {', '.join([f"{column_name} = EXCLUDED.{column_name}"
+            for column_name in column_names])};"""
     return ""
+
 
 def transform_addresses(table_data, cursor=None):
     for item in table_data:
@@ -271,12 +283,16 @@ def transform_smart_contracts(table_data, cursor=None):
         item["abi"] = json.dumps(item["abi"])
     return table_data
 
+
 def transform_address_names(table_data, cursor):
     latest_id = get_latest_id(cursor, "address_names")
     transformed_data = []
     for item in table_data:
         item["address_hash"] = bytes.fromhex(item["address_hash"])
-        cursor.execute("SELECT * FROM address_names WHERE address_hash = %s LIMIT 1", (item["address_hash"],))
+        cursor.execute(
+            "SELECT * FROM address_names WHERE address_hash = %s LIMIT 1",
+            (item["address_hash"],)
+        )
         row = cursor.fetchone()
         if row is None:
             latest_id += 1
@@ -284,10 +300,12 @@ def transform_address_names(table_data, cursor):
             transformed_data.append(item)
     return transformed_data
 
+
 def transform_smart_contracts_additional_sources(table_data, cursor=None):
     for item in table_data:
         item["address_hash"] = bytes.fromhex(item["address_hash"])
     return table_data
+
 
 def transform_blocks(table_data, cursor=None):
     for item in table_data:
@@ -300,6 +318,7 @@ def transform_blocks(table_data, cursor=None):
         item["nonce"] = bytes.fromhex(item["nonce"])
         item["parent_hash"] = bytes.fromhex(item["parent_hash"])
     return table_data
+
 
 def transform_transactions(table_data, cursor=None):
     for item in table_data:
@@ -318,7 +337,9 @@ def transform_transactions(table_data, cursor=None):
         if item["to_address_hash"] is not None:
             item["to_address_hash"] = bytes.fromhex(item["to_address_hash"])
         if item["created_contract_address_hash"] is not None:
-            item["created_contract_address_hash"] = bytes.fromhex(item["created_contract_address_hash"])
+            item["created_contract_address_hash"] = bytes.fromhex(
+                item["created_contract_address_hash"]
+            )
         if item["old_block_hash"] is not None:
             item["old_block_hash"] = bytes.fromhex(item["old_block_hash"])
     return table_data
@@ -328,11 +349,12 @@ def transform_tokens(table_data, cursor=None):
     for item in table_data:
         del item["bridged"]
         item["contract_address_hash"] = bytes.fromhex(item["contract_address_hash"])
-        if  item["total_supply"] is not None:
+        if item["total_supply"] is not None:
             item["total_supply"] = Decimal(item["total_supply"])
-        if  item["decimals"] is not None:
+        if item["decimals"] is not None:
             item["decimals"] = Decimal(item["decimals"])
     return table_data
+
 
 def transform_token_transfers(table_data, cursor=None):
     for item in table_data:
@@ -347,13 +369,30 @@ def transform_token_transfers(table_data, cursor=None):
             item["token_ids"] = [Decimal(token_id) for token_id in item["token_ids"]]
     return table_data
 
+
+def transform_address_current_token_balances(table_data, cursor):
+    cursor.execute("DELETE FROM address_current_token_balances")
+    for item in table_data:
+        item["address_hash"] = bytes.fromhex(item["address_hash"])
+        item["token_contract_address_hash"] = bytes.fromhex(item["token_contract_address_hash"])
+        item["value"] = Decimal(item["value"])
+        if item["old_value"] is not None:
+            item["old_value"] = Decimal(item["old_value"])
+        if item["token_id"] is not None:
+            item["token_id"] = Decimal(item["token_id"])
+    return table_data
+
+
 def update_sequences(schain_name):
     db_params["port"] = get_db_port(schain_name)
     connection = psycopg2.connect(**db_params)
     connection.autocommit = True
     cursor = connection.cursor()
     cursor.execute("SELECT SETVAL('address_names_id_seq', (SELECT MAX(id) FROM address_names));")
-    cursor.execute("SELECT SETVAL('smart_contracts_id_seq', (SELECT MAX(id) FROM smart_contracts));")
+    cursor.execute(
+        "SELECT SETVAL('smart_contracts_id_seq', "
+        "(SELECT MAX(id) FROM smart_contracts));"
+    )
     cursor.execute(
         "SELECT SETVAL('address_current_token_balances_id_seq', "
         "(SELECT MAX(id) FROM address_current_token_balances));"
@@ -364,6 +403,7 @@ def update_sequences(schain_name):
     )
     cursor.close()
     connection.close()
+
 
 def dump_all():
     schain_names = get_all_names()
@@ -383,11 +423,20 @@ def restore_all():
             restore_table(schain_name, "addresses", transform_addresses)
             restore_table(schain_name, "address_names", transform_address_names)
             restore_table(schain_name, "smart_contracts", transform_smart_contracts)
-            restore_table(schain_name, "smart_contracts_additional_sources", transform_smart_contracts_additional_sources)
+            restore_table(
+                schain_name,
+                "smart_contracts_additional_sources",
+                transform_smart_contracts_additional_sources
+            )
             restore_table(schain_name, "blocks", transform_blocks)
             restore_table(schain_name, "transactions", transform_transactions)
             restore_table(schain_name, "tokens", transform_tokens)
             restore_table(schain_name, "token_transfers", transform_token_transfers)
+            restore_table(
+                schain_name,
+                "address_current_token_balances",
+                transform_address_current_token_balances
+            )
             update_sequences(schain_name)
 
 
