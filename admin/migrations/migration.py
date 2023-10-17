@@ -22,46 +22,6 @@ db_params = {
     "database": "blockscout"
 }
 
-table_queries = [
-    {
-        "table_name": "addresses",
-        "sql_query": "SELECT * FROM addresses ORDER by hash"
-
-    },
-    {
-        "table_name": "address_names",
-        "sql_query": "SELECT * FROM address_names ORDER by inserted_at"
-    },
-    {
-        "table_name": "smart_contracts",
-        "sql_query": "SELECT * FROM smart_contracts ORDER BY id"
-    },
-    {
-        "table_name": "smart_contracts_additional_sources",
-        "sql_query": "SELECT * FROM smart_contracts_additional_sources ORDER BY id"
-    },
-    {
-        "table_name": "blocks",
-        "sql_query": "SELECT * FROM blocks ORDER BY number DESC"
-    },
-    {
-        "table_name": "transactions",
-        "sql_query": "SELECT * FROM transactions ORDER BY hash"
-    },
-    {
-        "table_name": "tokens",
-        "sql_query": "SELECT * FROM tokens ORDER by inserted_at"
-    },
-    {
-        "table_name": "token_transfers",
-        "sql_query": "SELECT * FROM token_transfers ORDER BY transaction_hash"
-    },
-    {
-        "table_name": "address_current_token_balances",
-        "sql_query": "SELECT * FROM address_current_token_balances ORDER BY id"
-    }
-]
-
 additional_columns_for_smart_contracts = {
     "contract_code_md5": "",
     "implementation_name": None,
@@ -138,7 +98,7 @@ def migration_status_decorator(func):
     return wrapper
 
 
-def dump(schain_name: str):
+def dump(schain_name: str, tables_metadata: list):
     schain_dump_dir = os.path.join(DUMPS_DIR_PATH, schain_name)
     os.makedirs(schain_dump_dir, exist_ok=True)
     db_params["port"] = get_db_port(schain_name)
@@ -148,7 +108,7 @@ def dump(schain_name: str):
         db_params["database"] = "explorer"
         connection = psycopg2.connect(**db_params)
     cursor = connection.cursor()
-    for table_info in table_queries:
+    for table_info in tables_metadata:
         table_name = table_info["table_name"]
         sql_query = table_info["sql_query"]
         table_dir = os.path.join(schain_dump_dir, table_name)
@@ -188,7 +148,7 @@ def dump(schain_name: str):
             with open(table_file, "w") as f:
                 json.dump(data, f, indent=4)
 
-    default_migration_status = {q["table_name"]: False for q in table_queries}
+    default_migration_status = {q["table_name"]: False for q in tables_metadata}
     migration_status_file = os.path.join(DUMPS_DIR_PATH, schain_name, "migration_status.json")
     with open(migration_status_file, "w") as f:
         json.dump(default_migration_status, f, indent=4)
@@ -263,6 +223,28 @@ def on_conflict_sql(table_name, column_names):
             SET {', '.join([f"{column_name} = EXCLUDED.{column_name}"
             for column_name in column_names])};"""
     return ""
+
+
+def update_sequences(schain_name):
+    db_params["port"] = get_db_port(schain_name)
+    connection = psycopg2.connect(**db_params)
+    connection.autocommit = True
+    cursor = connection.cursor()
+    cursor.execute("SELECT SETVAL('address_names_id_seq', (SELECT MAX(id) FROM address_names));")
+    cursor.execute(
+        "SELECT SETVAL('smart_contracts_id_seq', "
+        "(SELECT MAX(id) FROM smart_contracts));"
+    )
+    cursor.execute(
+        "SELECT SETVAL('address_current_token_balances_id_seq', "
+        "(SELECT MAX(id) FROM address_current_token_balances));"
+    )
+    cursor.execute(
+        "SELECT SETVAL('smart_contracts_additional_sources_id_seq', "
+        "(SELECT MAX(id) FROM smart_contracts_additional_sources));"
+    )
+    cursor.close()
+    connection.close()
 
 
 def transform_addresses(table_data, cursor=None):
@@ -383,68 +365,88 @@ def transform_address_current_token_balances(table_data, cursor):
     return table_data
 
 
-def update_sequences(schain_name):
-    db_params["port"] = get_db_port(schain_name)
-    connection = psycopg2.connect(**db_params)
-    connection.autocommit = True
-    cursor = connection.cursor()
-    cursor.execute("SELECT SETVAL('address_names_id_seq', (SELECT MAX(id) FROM address_names));")
-    cursor.execute(
-        "SELECT SETVAL('smart_contracts_id_seq', "
-        "(SELECT MAX(id) FROM smart_contracts));"
-    )
-    cursor.execute(
-        "SELECT SETVAL('address_current_token_balances_id_seq', "
-        "(SELECT MAX(id) FROM address_current_token_balances));"
-    )
-    cursor.execute(
-        "SELECT SETVAL('smart_contracts_additional_sources_id_seq', "
-        "(SELECT MAX(id) FROM smart_contracts_additional_sources));"
-    )
-    cursor.close()
-    connection.close()
+tables_metadata = [
+    {
+        "table_name": "addresses",
+        "sql_query": "SELECT * FROM addresses ORDER by hash",
+        "transform_function": transform_addresses
+    },
+    {
+        "table_name": "address_names",
+        "sql_query": "SELECT * FROM address_names ORDER by inserted_at",
+        "transform_function": transform_address_names
+    },
+    {
+        "table_name": "smart_contracts",
+        "sql_query": "SELECT * FROM smart_contracts ORDER BY id",
+        "transform_function": transform_smart_contracts
+    },
+    {
+        "table_name": "smart_contracts_additional_sources",
+        "sql_query": "SELECT * FROM smart_contracts_additional_sources ORDER BY id",
+        "transform_function": transform_smart_contracts_additional_sources
+    },
+    {
+        "table_name": "blocks",
+        "sql_query": "SELECT * FROM blocks ORDER BY number DESC",
+        "transform_function": transform_blocks
+    },
+    {
+        "table_name": "transactions",
+        "sql_query": "SELECT * FROM transactions ORDER BY hash",
+        "transform_function": transform_transactions
+    },
+    {
+        "table_name": "tokens",
+        "sql_query": "SELECT * FROM tokens ORDER by inserted_at",
+        "transform_function": transform_tokens
+    },
+    {
+        "table_name": "token_transfers",
+        "sql_query": "SELECT * FROM token_transfers ORDER BY transaction_hash",
+        "transform_function": transform_token_transfers
+    },
+    {
+        "table_name": "address_current_token_balances",
+        "sql_query": "SELECT * FROM address_current_token_balances ORDER BY id",
+        "transform_function": transform_address_current_token_balances
+    }
+]
 
 
-def dump_all():
+def dump_schains(only_contracts=False):
+    _tables_metadata = tables_metadata[:4] if only_contracts else tables_metadata
     schain_names = get_all_names()
     for schain_name in schain_names:
         if check_db_running(schain_name):
             print("-" * 50)
             print(f"Dumping schain: {schain_name}")
-            dump(schain_name)
+            dump(schain_name, _tables_metadata)
 
 
-def restore_all():
+def restore_schains(only_contracts=False):
+    _tables_metadata = tables_metadata[:4] if only_contracts else tables_metadata
     schain_names = get_all_names()
     for schain_name in schain_names:
         if check_db_running(schain_name):
             print("-" * 50)
             print(f"Restoring schain {schain_name}")
-            restore_table(schain_name, "addresses", transform_addresses)
-            restore_table(schain_name, "address_names", transform_address_names)
-            restore_table(schain_name, "smart_contracts", transform_smart_contracts)
-            restore_table(
-                schain_name,
-                "smart_contracts_additional_sources",
-                transform_smart_contracts_additional_sources
-            )
-            restore_table(schain_name, "blocks", transform_blocks)
-            restore_table(schain_name, "transactions", transform_transactions)
-            restore_table(schain_name, "tokens", transform_tokens)
-            restore_table(schain_name, "token_transfers", transform_token_transfers)
-            restore_table(
-                schain_name,
-                "address_current_token_balances",
-                transform_address_current_token_balances
-            )
+            for data in _tables_metadata:
+                restore_table(schain_name, data["table_name"], data["transform_function"])
             update_sequences(schain_name)
 
 
 def main():
-    if (sys.argv[1] == "dump"):
-        dump_all()
-    elif (sys.argv[1] == "restore"):
-        restore_all()
+    if sys.argv[1] == "dump":
+        if sys.argv[2] == "contracts":
+            dump_schains(only_contracts=True)
+        else:
+            dump_schains()
+    elif sys.argv[1] == "restore":
+        if sys.argv[2] == "contracts":
+            restore_schains(only_contracts=True)
+        else:
+            restore_schains()
     else:
         print("Specify migration mode (dump or restore)")
 
