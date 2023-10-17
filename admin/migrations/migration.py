@@ -438,12 +438,12 @@ def restore_schains(only_contracts=False):
 
 def main():
     if sys.argv[1] == "dump":
-        if sys.argv[2] == "contracts":
+        if len(sys.argv) == 3 and sys.argv[2] == "contracts":
             dump_schains(only_contracts=True)
         else:
             dump_schains()
     elif sys.argv[1] == "restore":
-        if sys.argv[2] == "contracts":
+        if len(sys.argv) == 3 and sys.argv[2] == "contracts":
             restore_schains(only_contracts=True)
         else:
             restore_schains()
