@@ -256,7 +256,7 @@ def transform_addresses(table_data, cursor=None):
 def transform_smart_contracts(table_data, cursor=None):
     for item in table_data:
         item["address_hash"] = bytes.fromhex(item["address_hash"])
-        if item["implementation_address_hash"] is not None:
+        if item.get("implementation_address_hash") is not None:
             item["implementation_address_hash"] = bytes.fromhex(item["implementation_address_hash"])
         item["abi"] = json.dumps(item["abi"])
     return table_data
