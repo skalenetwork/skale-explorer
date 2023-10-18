@@ -23,11 +23,7 @@ db_params = {
 }
 
 additional_columns_for_smart_contracts = {
-    "contract_code_md5": "",
-    "implementation_name": None,
-    "implementation_address_hash": None,
-    "implementation_fetched_at": None,
-    "compiler_settings": []
+    "contract_code_md5": ""
 }
 
 
