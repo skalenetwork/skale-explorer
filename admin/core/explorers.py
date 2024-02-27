@@ -17,24 +17,40 @@ from admin.migrations.revert_reasons import upgrade
 logger = logging.getLogger(__name__)
 
 
-def run_explorer(schain_name, endpoint, ws_endpoint):
-    explorer_port = get_free_port()
-    db_port = get_db_port(schain_name)
+def run_explorer(schain_name, chain_id, endpoint, ws_endpoint):
+    schain_meta = get_schain_meta(schain_name)
+    proxy_port = schain_meta['proxy_port'] if schain_meta else get_free_port()
+    db_port = schain_meta['db_port'] if schain_meta else get_free_port()
+    stats_port = schain_meta['stats_port'] if schain_meta else get_free_port()
+    stats_db_port = schain_meta['stats_db_port'] if schain_meta else get_free_port()
+    scv_port = schain_meta['scv_port'] if schain_meta else get_free_port()
+    first_block = schain_meta['first_block'] if schain_meta else get_first_block(schain_name)
     config_host_path = generate_config(schain_name)
     env = {
         'SCHAIN_NAME': schain_name,
-        'PORT': str(explorer_port),
+        'CHAIN_ID': str(chain_id),
+        'PROXY_PORT': str(proxy_port),
         'DB_PORT': str(db_port),
+        'STATS_PORT': str(stats_port),
+        'STATS_DB_PORT': str(stats_db_port),
+        'SC_VERIFIER_PORT': str(scv_port),
         'ENDPOINT': endpoint,
         'WS_ENDPOINT': ws_endpoint,
         'CONFIG_PATH': config_host_path,
         'BLOCKSCOUT_VERSION': EXPLORER_VERSION
     }
     logger.info(f'Running explorer with {env}')
-    logger.info('=' * 100)
-    subprocess.run(['bash', EXPLORER_SCRIPT_PATH], env={**env, **os.environ})
-    logger.info('=' * 100)
-    update_meta_data(schain_name, explorer_port, db_port, endpoint, ws_endpoint, EXPLORER_VERSION)
+    command = [
+        DOCKER_COMPOSE_BIN_PATH,
+        'compose',
+        '-f',
+        DOCKER_COMPOSE_CONFIG_PATH,
+        'up',
+        '-d'
+    ]
+    subprocess.run(command, env={**env, **os.environ})
+    update_meta_data(schain_name, proxy_port, db_port, stats_port,
+                     stats_db_port, scv_port, endpoint, ws_endpoint, first_block)
     regenerate_nginx_config()
     restart_nginx()
     logger.info(f'sChain explorer is running on {schain_name}. subdomain')

@@ -108,7 +108,7 @@ def regenerate_nginx_config():
         if explorers[schain_name].get('explorer_origin'):
             explorer_endpoint = explorers[schain_name]['explorer_origin']
         else:
-            explorer_endpoint = f'http://127.0.0.1:{explorers[schain_name]["port"]}'
+            explorer_endpoint = f'http://127.0.0.1:{explorers[schain_name]["proxy_port"]}'
         if os.path.isfile(SSL_CRT_PATH) and os.path.isfile(SSL_KEY_PATH):
             schain_config = generate_schain_nginx_config(schain_name, explorer_endpoint, ssl=True)
         else:

@@ -36,14 +36,18 @@ def set_schain_upgraded(schain_name):
     write_json(EXPLORERS_META_DATA_PATH, meta)
 
 
-def update_meta_data(schain_name, port, db_port, endpoint, ws_endpoint, version):
+def update_meta_data(schain_name, proxy_port, db_port, stats_port,
+                     stats_db_port, scv_port, endpoint, ws_endpoint, first_block):
     logger.info(f'Updating meta data for {schain_name}')
     meta_data = read_json(EXPLORERS_META_DATA_PATH)
     explorers = meta_data['explorers']
     schain_meta = explorers.get(schain_name, {})
     schain_meta.update({
-        'port': port,
+        'proxy_port': proxy_port,
         'db_port': db_port,
+        'stats_port': stats_port,
+        'stats_db_port': stats_db_port,
+        'scv_port': scv_port,
         'endpoint': endpoint,
         'ws_endpoint': ws_endpoint,
         'version': version,
@@ -59,7 +63,7 @@ def get_schain_endpoint(schain_name):
 
 
 def get_explorer_endpoint(schain_name):
-    explorer_port = get_schain_meta(schain_name)['port']
+    explorer_port = get_schain_meta(schain_name)['proxy_port']
     return f'http://127.0.0.1:{explorer_port}'
 
 

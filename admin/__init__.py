@@ -9,6 +9,11 @@ ABI_FILEPATH = os.path.join(SERVER_DATA_DIR, 'abi.json')
 GAS_PRICES_FILEPATH = os.path.join(SERVER_DATA_DIR, 'gas_prices.csv')
 EXPLORERS_META_DATA_PATH = os.path.join(SERVER_DATA_DIR, 'meta.json')
 SCHAIN_CONFIG_DIR_PATH = os.path.join(SERVER_DATA_DIR, 'configs')
+DOCKER_COMPOSE_CONFIG_PATH = os.path.join(BLOCKSCOUT_PATH,
+                                          'docker-compose',
+                                          'docker-compose.yml')
+DOCKER_COMPOSE_BIN_PATH = '/usr/bin/docker'
+DUMPS_DIR_PATH = os.path.join(SERVER_DATA_DIR, 'dumps')
 
 
 HOST_DIR_PATH = os.environ.get('HOST_DIR_PATH')

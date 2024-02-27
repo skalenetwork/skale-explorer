@@ -17,17 +17,17 @@ RUNNING_STATUS = 'running'
 
 
 def is_explorer_found(schain_name):
-    container_name = f'blockscout_{schain_name}'
+    container_name = f'{schain_name}_proxy'
     return is_container_exists(container_name)
 
 
 def is_explorer_running(schain_name):
-    container_name = f'blockscout_{schain_name}'
+    container_name = f'{schain_name}_proxy'
     return get_info(container_name) == RUNNING_STATUS
 
 
 def remove_explorer(schain_name):
-    container_name = f'blockscout_{schain_name}'
+    container_name = f'{schain_name}_proxy'
     if is_container_exists(container_name):
         logger.warning(f'Removing {container_name}...')
         return dutils.containers.get(container_name).remove(force=True)
@@ -53,7 +53,7 @@ def get_info(container_id: str):
 
 def get_db_port(schain_name):
     try:
-        db = dutils.containers.get(f'postgres_{schain_name}')
+        db = dutils.containers.get(f'{schain_name}_db')
         return get_container_host_port(db)
     except docker.errors.NotFound:
         return get_free_port()
@@ -72,8 +72,8 @@ def restart_nginx():
 
 def restart_postgres(schain_name):
     try:
-        db = dutils.containers.get(f'postgres_{schain_name}')
-        logger.info(f'Restarting postgres_{schain_name} container...')
+        db = dutils.containers.get(f'{schain_name}_db')
+        logger.info(f'Restarting {schain_name}_db container...')
         db.restart()
     except docker.errors.NotFound:
         logger.warning(f'DB for {schain_name} not found')
@@ -88,7 +88,12 @@ def get_free_port():
 
 def check_db_exists(schain_name):
     try:
-        dutils.containers.get(f'postgres_{schain_name}')
+        dutils.containers.get(f'{schain_name}_db')
         return True
     except docker.errors.NotFound:
         return False
+
+
+def check_db_running(schain_name):
+    container_name = f'{schain_name}_db'
+    return get_info(container_name) == RUNNING_STATUS
