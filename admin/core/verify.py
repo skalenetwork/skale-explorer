@@ -89,7 +89,7 @@ def is_contract_verified(schain_name, address):
 
 
 def check_verify_status(schain_name, uid):
-    if uid == 'Smart-contract already verified':
+    if uid == 'Smart-contract already verified.':
         logger.info('Contract already verified')
         return True
     schain_explorer_endpoint = get_explorer_endpoint(schain_name)

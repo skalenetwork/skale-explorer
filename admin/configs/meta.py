@@ -1,8 +1,6 @@
 import logging
-from datetime import datetime
-from time import time
 
-from admin import EXPLORERS_META_DATA_PATH, EXPLORER_VERSION, STATS_TIME_DELTA
+from admin import EXPLORERS_META_DATA_PATH
 from admin.utils.helper import read_json, write_json
 
 logger = logging.getLogger(__name__)
@@ -19,10 +17,6 @@ def is_schain_upgraded(schain_name):
     schain_meta = get_schain_meta(schain_name)
     if not schain_meta or schain_meta.get('updated'):
         return True
-
-
-def is_current_version(schain_name):
-    return get_schain_meta(schain_name).get('version') == EXPLORER_VERSION
 
 
 def verified_contracts(schain_name):
@@ -50,7 +44,7 @@ def update_meta_data(schain_name, proxy_port, db_port, stats_port,
         'scv_port': scv_port,
         'endpoint': endpoint,
         'ws_endpoint': ws_endpoint,
-        'version': version,
+        'first_block': first_block
     })
     explorers.update({
         schain_name: schain_meta
@@ -80,45 +74,3 @@ def set_chain_verified(schain_name):
 
 def get_explorers_meta():
     return read_json(EXPLORERS_META_DATA_PATH)['explorers']
-
-
-def is_statistic_updated():
-    data = read_json(EXPLORERS_META_DATA_PATH)
-    last_updated = data.get('stats_last_updated')
-    if not last_updated:
-        return False
-    if time() - last_updated < STATS_TIME_DELTA:
-        return True
-    return False
-
-
-def update_statistic_ts(ts):
-    logger.info(f'Update last statistic ts: {ts}')
-    data = read_json(EXPLORERS_META_DATA_PATH)
-    data['stats_last_updated'] = ts
-    write_json(EXPLORERS_META_DATA_PATH, data)
-
-
-def is_gas_prices_updated():
-    data = read_json(EXPLORERS_META_DATA_PATH)
-    last_updated = data.get('gas_price_last_updated')
-    if not last_updated:
-        return False
-    current_date = datetime.today().date()
-    last_updated_date = datetime.strptime(last_updated, '%Y-%m-%d').date()
-    if last_updated_date < current_date:
-        return False
-    return True
-
-
-def update_gas_prices_time(date):
-    logger.info(f'Update last gas_price date: {date}')
-    data = read_json(EXPLORERS_META_DATA_PATH)
-    data['gas_price_last_updated'] = date
-    write_json(EXPLORERS_META_DATA_PATH, data)
-
-
-def get_gas_prices_update_time():
-    data = read_json(EXPLORERS_META_DATA_PATH)
-    last_updated = data.get('gas_price_last_updated')
-    return last_updated

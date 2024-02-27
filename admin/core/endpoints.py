@@ -6,7 +6,7 @@ from enum import Enum
 from web3 import Web3, HTTPProvider, WebsocketProvider
 from Crypto.Hash import keccak
 
-from admin import ENDPOINT, ABI_FILEPATH, PROXY_DOMAIN_NAME, SCHAIN_NAMES
+from admin import ENDPOINT, ABI_FILEPATH, PROXY_DOMAIN_NAME, SCHAIN_NAMES, FROM_FIRST_BLOCK
 from admin.utils.helper import read_json
 
 logger = logging.getLogger(__name__)
@@ -154,6 +154,20 @@ def get_proxy_endpoint(schain_name, ws=False):
     if ws:
         return f'ws://{PROXY_DOMAIN_NAME}/v1/ws/{schain_name}'
     return f'https://{PROXY_DOMAIN_NAME}/v1/{schain_name}'
+
+
+def get_first_block(schain_name):
+    if FROM_FIRST_BLOCK:
+        return 0
+    endpoint = get_schain_endpoint(schain_name)
+    w3 = Web3(HTTPProvider(endpoint))
+    return w3.eth.get_block_number()
+
+
+def get_chain_id(schain_name):
+    endpoint = get_schain_endpoint(schain_name)
+    w3 = Web3(HTTPProvider(endpoint))
+    return w3.eth.chain_id
 
 
 def get_schain_endpoint(schain_name, ws=False):

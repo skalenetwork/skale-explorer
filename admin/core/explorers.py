@@ -2,15 +2,15 @@ import logging
 import os
 import subprocess
 
-from admin import EXPLORER_VERSION, EXPLORER_SCRIPT_PATH
+from admin import (DOCKER_COMPOSE_CONFIG_PATH, DOCKER_COMPOSE_BIN_PATH,
+                   COMPOSE_HTTP_TIMEOUT, BLOCKSCOUT_DATA_DIR)
 from admin.configs.meta import (update_meta_data, get_schain_meta, get_explorers_meta,
-                                set_schain_upgraded, is_current_version, is_schain_upgraded,
-                                verified_contracts)
+                                set_schain_upgraded, is_schain_upgraded, verified_contracts)
 from admin.configs.nginx import regenerate_nginx_config
 from admin.configs.schains import generate_config
-from admin.core.containers import (get_free_port, get_db_port, restart_nginx,
+from admin.core.containers import (get_free_port, restart_nginx,
                                    is_explorer_running, remove_explorer)
-from admin.core.endpoints import is_dkg_passed, get_schain_endpoint
+from admin.core.endpoints import is_dkg_passed, get_schain_endpoint, get_first_block, get_chain_id
 from admin.core.verify import verify
 from admin.migrations.revert_reasons import upgrade
 
@@ -26,6 +26,7 @@ def run_explorer(schain_name, chain_id, endpoint, ws_endpoint):
     scv_port = schain_meta['scv_port'] if schain_meta else get_free_port()
     first_block = schain_meta['first_block'] if schain_meta else get_first_block(schain_name)
     config_host_path = generate_config(schain_name)
+    blockscout_data_dir = f'{BLOCKSCOUT_DATA_DIR}/{schain_name}'
     env = {
         'SCHAIN_NAME': schain_name,
         'CHAIN_ID': str(chain_id),
@@ -37,7 +38,10 @@ def run_explorer(schain_name, chain_id, endpoint, ws_endpoint):
         'ENDPOINT': endpoint,
         'WS_ENDPOINT': ws_endpoint,
         'CONFIG_PATH': config_host_path,
-        'BLOCKSCOUT_VERSION': EXPLORER_VERSION
+        'COMPOSE_PROJECT_NAME': schain_name,
+        'COMPOSE_HTTP_TIMEOUT': str(COMPOSE_HTTP_TIMEOUT),
+        'FIRST_BLOCK': str(first_block),
+        'SCHAIN_DATA_DIR': blockscout_data_dir
     }
     logger.info(f'Running explorer with {env}')
     command = [
@@ -64,8 +68,9 @@ def run_explorer_for_schain(schain_name):
     else:
         endpoint = get_schain_endpoint(schain_name)
         ws_endpoint = get_schain_endpoint(schain_name, ws=True)
+    chain_id = get_chain_id(schain_name)
     if endpoint and ws_endpoint:
-        run_explorer(schain_name, endpoint, ws_endpoint)
+        run_explorer(schain_name, chain_id, endpoint, ws_endpoint)
     else:
         logger.warning(f"Couldn't create blockexplorer instance for {schain_name}")
 
@@ -77,7 +82,7 @@ def check_explorer_for_schain(schain_name):
     if schain_name not in explorers:
         run_explorer_for_schain(schain_name)
         set_schain_upgraded(schain_name)
-    if not is_explorer_running(schain_name) or not is_current_version(schain_name):
+    if not is_explorer_running(schain_name):
         if not is_explorer_running(schain_name):
             logger.warning(f'Blockscout is not working for {schain_name}. Recreating...')
         else:
