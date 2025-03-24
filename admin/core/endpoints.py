@@ -152,7 +152,7 @@ def check_endpoint(endpoint, ws=False):
 
 def get_proxy_endpoint(schain_name, ws=False):
     if ws:
-        return f'ws://{PROXY_DOMAIN_NAME}/v1/ws/{schain_name}'
+        return f'wss://{PROXY_DOMAIN_NAME}/v1/ws/{schain_name}'
     return f'https://{PROXY_DOMAIN_NAME}/v1/{schain_name}'
 
 
@@ -186,7 +186,7 @@ def get_schain_endpoint(schain_name, ws=False):
     endpoints = endpoints_for_schain(schains_internal_contract, nodes_contract, schain_id)
     for node in endpoints['nodes']:
         if ws:
-            endpoint = node['ws_endpoint_domain']
+            endpoint = node['wss_endpoint_domain']
         else:
             endpoint = node['https_endpoint_domain']
         if check_endpoint(endpoint, ws):
