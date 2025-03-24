@@ -25,7 +25,7 @@ BLOCKSCOUT_PROXY_CONFIG_DIR = os.path.join(HOST_DIR_PATH, 'deps', 'blockscout',
 BLOCKSCOUT_PROXY_SSL_CONFIG_DIR = os.path.join(HOST_DIR_PATH, 'deps', 'blockscout',
                                                'docker-compose', 'proxy-ssl')
 BLOCKSCOUT_ASSETS_DIR = os.path.join(HOST_DIR_PATH, 'deps', 'blockscout', 'docker-compose',
-                                     'assets')
+                                     'assets', 'stats')
 
 
 NGINX_CONFIGS_DIR = os.path.join(SERVER_DATA_DIR, 'nginx')
