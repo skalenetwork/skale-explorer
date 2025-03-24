@@ -1,3 +1,4 @@
+wheel==0.45.1
 web3==5.23.1
 docker==5.0.2
 crossplane==0.5.7
