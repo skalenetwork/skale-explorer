@@ -34,8 +34,27 @@ def generate_schain_nginx_config(schain_name, explorer_endpoint, ssl=False):
     return config
 
 
+def insert_proxy_headers(config):
+    headers = [
+        {"directive": "proxy_buffer_size", "args": ["128k"]},
+        {"directive": "proxy_buffers", "args": ["4", "256k"]},
+        {"directive": "proxy_busy_buffers_size", "args": ["256k"]},
+        {"directive": "proxy_temp_file_write_size", "args": ["256k"]}
+    ]
+    index = None
+    for i, directive in enumerate(config['block']):
+        if directive['directive'] == "server_name":
+            index = i
+            break
+    if index is None:
+        index = len(config['block'])
+    for header in reversed(headers):
+        config['block'].insert(index + 1, header)
+    return config
+
+
 def generate_base_nginx_config(schain_name, explorer_endpoint):
-    return {
+    config = {
         "directive": "server",
         "args": [],
         "block": [
@@ -99,6 +118,7 @@ def generate_base_nginx_config(schain_name, explorer_endpoint):
             }
         ]
     }
+    return insert_proxy_headers(config)
 
 
 def generate_default_nginx_config(ssl=False):

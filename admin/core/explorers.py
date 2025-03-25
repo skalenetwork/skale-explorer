@@ -6,11 +6,10 @@ from time import sleep
 import requests
 
 from admin import (BLOCKSCOUT_DATA_DIR, ENVS_DIR_PATH, BLOCKSCOUT_PROXY_CONFIG_DIR,
-                   BLOCKSCOUT_ASSETS_DIR, SSL_ENABLED,
+                   SSL_ENABLED, RE_CAPTCHA_SECRET_KEY,
                    HOST_DOMAIN, BLOCKSCOUT_PROXY_SSL_CONFIG_DIR, HOST_SSL_DIR_PATH,
                    WALLET_CONNECT_PROJECT_ID, BLOCKSCOUT_BACKEND_DOCKER_TAG,
-                   BLOCKSCOUT_FRONTEND_DOCKER_TAG, IS_TESTNET, DB_PASSWORD,
-                   RE_CAPTCHA_SECRET_KEY)
+                   BLOCKSCOUT_FRONTEND_DOCKER_TAG, IS_TESTNET, DB_PASSWORD)
 from admin.configs.meta import get_explorer_endpoint
 from admin.configs.nginx import regenerate_nginx_config
 from admin.configs.schains import generate_config
@@ -90,8 +89,7 @@ def generate_common_envs(schain_name):
     common_envs = {
         'COMPOSE_PROJECT_NAME': schain_name,
         'BLOCKSCOUT_BACKEND_DOCKER_TAG': BLOCKSCOUT_BACKEND_DOCKER_TAG,
-        'BLOCKSCOUT_FRONTEND_DOCKER_TAG': BLOCKSCOUT_FRONTEND_DOCKER_TAG,
-        'BLOCKSCOUT_ASSETS_DIR': BLOCKSCOUT_ASSETS_DIR,
+        'BLOCKSCOUT_FRONTEND_DOCKER_TAG': BLOCKSCOUT_FRONTEND_DOCKER_TAG
     }
     if WALLET_CONNECT_PROJECT_ID:
         common_envs.update({
