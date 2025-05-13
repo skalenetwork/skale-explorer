@@ -131,7 +131,7 @@ def generate_schain_envs(schain_name):
     if NOVES_SUPPORTED_CHAINS.get(schain_name):
         schain_envs.update({
             'NOVES_FI_CHAIN_NAME': NOVES_SUPPORTED_CHAINS[schain_name],
-            'NOVES_API_KEY': os.environ.get('NOVES_API_KEY'),
+            'NOVES_API_KEY': NOVES_API_KEY,
             'NEXT_PUBLIC_TRANSACTION_INTERPRETATION_PROVIDER': 'noves'
         })
     return schain_envs
