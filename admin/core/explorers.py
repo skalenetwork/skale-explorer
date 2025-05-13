@@ -6,10 +6,11 @@ from time import sleep
 import requests
 
 from admin import (BLOCKSCOUT_DATA_DIR, ENVS_DIR_PATH, BLOCKSCOUT_PROXY_CONFIG_DIR,
-                   SSL_ENABLED, RE_CAPTCHA_SECRET_KEY,
+                   SSL_ENABLED, RE_CAPTCHA_SECRET_KEY, NOVES_SUPPORTED_CHAINS,
                    HOST_DOMAIN, BLOCKSCOUT_PROXY_SSL_CONFIG_DIR, HOST_SSL_DIR_PATH,
                    WALLET_CONNECT_PROJECT_ID, BLOCKSCOUT_BACKEND_DOCKER_TAG,
-                   BLOCKSCOUT_FRONTEND_DOCKER_TAG, IS_TESTNET, DB_PASSWORD)
+                   BLOCKSCOUT_FRONTEND_DOCKER_TAG, IS_TESTNET, DB_PASSWORD,
+                   NOVES_API_KEY)
 from admin.configs.meta import get_explorer_endpoint
 from admin.configs.nginx import regenerate_nginx_config
 from admin.configs.schains import generate_config
@@ -126,6 +127,11 @@ def generate_schain_envs(schain_name):
         'CONFIG_PATH': config_host_path,
         'NEXT_PUBLIC_IS_TESTNET': json.dumps(IS_TESTNET)
     }
+    if NOVES_SUPPORTED_CHAINS.get(schain_name):
+        schain_envs.update({
+            'NOVES_FI_CHAIN_NAME': NOVES_SUPPORTED_CHAINS[schain_name],
+            'NOVES_API_KEY': os.environ.get('NOVES_API_KEY'),
+        })
     return schain_envs
 
 
