@@ -61,7 +61,7 @@ STATS_TIME_DELTA = 3600
 GAS_PRICE_REFRESHING_TIME = 86400
 COMPOSE_HTTP_TIMEOUT = 600
 
-NOVES_SUPPORTED_CHAINS = [
+NOVES_SUPPORTED_CHAINS = {
     "honorable-steel-rasalhague": "skale-calypso-hub",
     "elated-tan-skat": "skale-europa-hub",
     "green-giddy-denebola": "skale-nebula-hub",
@@ -70,4 +70,4 @@ NOVES_SUPPORTED_CHAINS = [
     "juicy-low-small-testnet": "skale-europa-hub-testnet",
     "lanky-ill-funny-testnet": "skale-nebula-hub-testnet",
     "aware-fake-trim-testnet": "skale-titan-hub-testnet"
-]
+}

@@ -125,12 +125,14 @@ def generate_schain_envs(schain_name):
         'WS_ENDPOINT': get_schain_endpoint(schain_name, ws=True),
         'SCHAIN_DATA_DIR': schain_data_dir,
         'CONFIG_PATH': config_host_path,
-        'NEXT_PUBLIC_IS_TESTNET': json.dumps(IS_TESTNET)
+        'NEXT_PUBLIC_IS_TESTNET': json.dumps(IS_TESTNET),
+        'NEXT_PUBLIC_TRANSACTION_INTERPRETATION_PROVIDER': 'none'
     }
     if NOVES_SUPPORTED_CHAINS.get(schain_name):
         schain_envs.update({
             'NOVES_FI_CHAIN_NAME': NOVES_SUPPORTED_CHAINS[schain_name],
             'NOVES_API_KEY': os.environ.get('NOVES_API_KEY'),
+            'NEXT_PUBLIC_TRANSACTION_INTERPRETATION_PROVIDER': 'noves'
         })
     return schain_envs
 
