@@ -43,6 +43,7 @@ BLOCKSCOUT_BACKEND_DOCKER_TAG = os.environ.get('BLOCKSCOUT_BACKEND_DOCKER_TAG')
 BLOCKSCOUT_FRONTEND_DOCKER_TAG = os.environ.get('BLOCKSCOUT_FRONTEND_DOCKER_TAG')
 DB_PASSWORD = os.environ.get('DB_PASSWORD')
 RE_CAPTCHA_SECRET_KEY = os.environ.get('RE_CAPTCHA_SECRET_KEY')
+NOVES_API_KEY = os.environ.get('NOVES_API_KEY')
 
 SSL_DIR_PATH = os.path.join(SERVER_DATA_DIR, 'certs')
 SSL_CRT_PATH = os.path.join(SSL_DIR_PATH, 'server.crt')
@@ -59,3 +60,14 @@ ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
 STATS_TIME_DELTA = 3600
 GAS_PRICE_REFRESHING_TIME = 86400
 COMPOSE_HTTP_TIMEOUT = 600
+
+NOVES_SUPPORTED_CHAINS = {
+    "honorable-steel-rasalhague": "skale-calypso-hub",
+    "elated-tan-skat": "skale-europa-hub",
+    "green-giddy-denebola": "skale-nebula-hub",
+    "parallel-stormy-spica": "skale-titan-hub",
+    "giant-half-dual-testnet": "skale-calypso-hub-testnet",
+    "juicy-low-small-testnet": "skale-europa-hub-testnet",
+    "lanky-ill-funny-testnet": "skale-nebula-hub-testnet",
+    "aware-fake-trim-testnet": "skale-titan-hub-testnet"
+}
