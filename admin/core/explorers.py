@@ -10,7 +10,7 @@ from admin import (BLOCKSCOUT_DATA_DIR, ENVS_DIR_PATH, BLOCKSCOUT_PROXY_CONFIG_D
                    HOST_DOMAIN, BLOCKSCOUT_PROXY_SSL_CONFIG_DIR, HOST_SSL_DIR_PATH,
                    WALLET_CONNECT_PROJECT_ID, BLOCKSCOUT_BACKEND_DOCKER_TAG,
                    BLOCKSCOUT_FRONTEND_DOCKER_TAG, IS_TESTNET, DB_PASSWORD,
-                   NOVES_API_KEY)
+                   NOVES_API_KEY, HOST)
 from admin.configs.meta import get_explorer_endpoint
 from admin.configs.nginx import regenerate_nginx_config
 from admin.configs.schains import generate_config
@@ -149,9 +149,10 @@ def generate_network_envs():
             'BLOCKSCOUT_PROXY_CERTS_PATH': HOST_SSL_DIR_PATH,
             'BLOCKSCOUT_PROXY_CONFIG_DIR': BLOCKSCOUT_PROXY_SSL_CONFIG_DIR,
         }
-    else:
-        public_ip = requests.get('https://api.ipify.org').content.decode('utf8')
-        return {
-            'HOST': str(public_ip),
-            'BLOCKSCOUT_PROXY_CONFIG_DIR': BLOCKSCOUT_PROXY_CONFIG_DIR,
-        }
+    public_ip = requests.get('https://api.ipify.org').content.decode('utf8')
+    if HOST:
+        public_ip = HOST
+    return {
+        'HOST': str(public_ip),
+        'BLOCKSCOUT_PROXY_CONFIG_DIR': BLOCKSCOUT_PROXY_CONFIG_DIR,
+    }
