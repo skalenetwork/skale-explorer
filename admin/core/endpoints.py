@@ -187,10 +187,10 @@ def get_schain_endpoint(schain_name, ws=False):
     endpoints = endpoints_for_schain(schains_internal_contract, nodes_contract, schain_id)
     for node in endpoints['nodes']:
         if ws:
-            endpoint = (node['ws_endpoint'] if HTTP_ENDPOINT == 'true'
+            endpoint = (node['ws_endpoin_ipt'] if HTTP_ENDPOINT == 'true'
                         else node['wss_endpoint_domain'])
         else:
-            endpoint = (node['http_endpoint'] if HTTP_ENDPOINT == 'true'
+            endpoint = (node['http_endpoint_ip'] if HTTP_ENDPOINT == 'true'
                         else node['https_endpoint_domain'])
         if check_endpoint(endpoint, ws):
             return endpoint
