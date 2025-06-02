@@ -60,6 +60,8 @@ To run explorer-admin, `.env` file shoudl be created in the project root directo
 - BLOCKSCOUT_FRONTEND_DOCKER_TAG - version of skalenetwork/blockscout-frontend container to use _(optional)_
 - DB_PASSWORD - password for postgres database _(optional)_
 - RE_CAPTCHA_SECRET_KEY - private key used on blockscout server side to securely verify that user interactions on your website are performed by humans _(optional)_
+- HTTP_ENDPOINT - set to 'true' to use IP endpoints instead of domain endpoints for devnet support _(optional)_
+- HOST - override auto-detected public IP address with custom host value _(optional)_
 
 ## Additional Documentation
 
