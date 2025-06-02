@@ -44,6 +44,8 @@ BLOCKSCOUT_FRONTEND_DOCKER_TAG = os.environ.get('BLOCKSCOUT_FRONTEND_DOCKER_TAG'
 DB_PASSWORD = os.environ.get('DB_PASSWORD')
 RE_CAPTCHA_SECRET_KEY = os.environ.get('RE_CAPTCHA_SECRET_KEY')
 NOVES_API_KEY = os.environ.get('NOVES_API_KEY')
+HTTP_ENDPOINT = os.environ.get('HTTP_ENDPOINT')
+HOST = os.environ.get('HOST')
 
 SSL_DIR_PATH = os.path.join(SERVER_DATA_DIR, 'certs')
 SSL_CRT_PATH = os.path.join(SSL_DIR_PATH, 'server.crt')
