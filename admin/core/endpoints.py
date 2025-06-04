@@ -7,7 +7,7 @@ from web3 import Web3, HTTPProvider, WebsocketProvider
 from Crypto.Hash import keccak
 
 from admin import (ENDPOINT, ABI_FILEPATH, PROXY_DOMAIN_NAME,
-                   SCHAIN_NAMES, FROM_FIRST_BLOCK, HTTP_ENDPOINT)
+                   SCHAIN_NAMES, FROM_FIRST_BLOCK, USE_HTTP_ENDPOINT)
 from admin.utils.helper import read_json
 
 logger = logging.getLogger(__name__)
@@ -187,10 +187,10 @@ def get_schain_endpoint(schain_name, ws=False):
     endpoints = endpoints_for_schain(schains_internal_contract, nodes_contract, schain_id)
     for node in endpoints['nodes']:
         if ws:
-            endpoint = (node['ws_endpoin_ipt'] if HTTP_ENDPOINT == 'true'
+            endpoint = (node['ws_endpoint_ip'] if USE_HTTP_ENDPOINT
                         else node['wss_endpoint_domain'])
         else:
-            endpoint = (node['http_endpoint_ip'] if HTTP_ENDPOINT == 'true'
+            endpoint = (node['http_endpoint_ip'] if USE_HTTP_ENDPOINT
                         else node['https_endpoint_domain'])
         if check_endpoint(endpoint, ws):
             return endpoint
