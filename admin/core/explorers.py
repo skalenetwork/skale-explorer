@@ -38,9 +38,8 @@ def run_explorer_for_schain(schain_name, update=False):
         write_json_into_env(env_file_path, env_data)
         logger.info(f'Env for {schain_name} is generated: {env_file_path}')
     run_blockscout_containers(env_file_path)
-    if NETWORK_NAME == 'skale':
-        regenerate_nginx_config()
-        restart_nginx()
+    regenerate_nginx_config()
+    restart_nginx()
     internal_endpoint = get_explorer_endpoint(schain_name)
     logger.info(f'{schain_name} explorer is running on {internal_endpoint} endpoint internally')
     logger.info(f'{schain_name} explorer is running on {schain_name}. subdomain')
@@ -77,17 +76,12 @@ def generate_blockscout_envs(schain_name):
 
 def generate_port_envs():
     base_port = find_sequential_free_ports(5)
-    ports = {
+    return {
         'PROXY_PORT': str(base_port),
         'DB_PORT': str(base_port + 1),
         'STATS_PORT': str(base_port + 2),
         'STATS_DB_PORT': str(base_port + 3),
     }
-    if NETWORK_NAME == 'fair':
-        ports.update({
-            'PROXY_PORT': '443' if SSL_ENABLED else '80',
-        })
-    return ports
 
 
 def generate_common_envs(schain_name):
@@ -147,13 +141,15 @@ def generate_network_envs():
     if SSL_ENABLED:
         return {
             'HOST': HOST_DOMAIN,
-            'PROXY_BASE_PORT': 443,
+            'PROXY_BASE_PORT': str(443),
             'SSL_ENABLED': 'true',
             'BLOCKSCOUT_PROXY_CERTS_PATH': HOST_SSL_DIR_PATH,
+            'BLOCKSCOUT_PROXY_CONFIG_DIR': BLOCKSCOUT_PROXY_SSL_CONFIG_DIR
         }
     public_ip = requests.get('https://api.ipify.org').content.decode('utf8')
     if PUBLIC_IP:
         public_ip = PUBLIC_IP
     return {
-        'HOST': str(public_ip),
+        'HOST': public_ip,
+        'BLOCKSCOUT_PROXY_CONFIG_DIR': BLOCKSCOUT_PROXY_CONFIG_DIR
     }
