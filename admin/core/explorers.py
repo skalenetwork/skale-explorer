@@ -10,7 +10,7 @@ from admin import (BLOCKSCOUT_DATA_DIR, ENVS_DIR_PATH, BLOCKSCOUT_PROXY_CONFIG_D
                    HOST_DOMAIN, BLOCKSCOUT_PROXY_SSL_CONFIG_DIR, HOST_SSL_DIR_PATH,
                    WALLET_CONNECT_PROJECT_ID, BLOCKSCOUT_BACKEND_DOCKER_TAG,
                    BLOCKSCOUT_FRONTEND_DOCKER_TAG, IS_TESTNET, DB_PASSWORD,
-                   NOVES_API_KEY, HOST)
+                   NOVES_API_KEY, PUBLIC_IP, NETWORK_NAME)
 from admin.configs.meta import get_explorer_endpoint
 from admin.configs.nginx import regenerate_nginx_config
 from admin.configs.schains import generate_config
@@ -29,8 +29,6 @@ def check_explorer_for_schain(schain_name, update=False):
         return
     if not is_explorer_running(schain_name):
         run_explorer_for_schain(schain_name, update)
-        sleep(60)
-        verify(schain_name)
 
 
 def run_explorer_for_schain(schain_name, update=False):
