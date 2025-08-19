@@ -40,8 +40,9 @@ def run_explorer_for_schain(schain_name, update=False):
         write_json_into_env(env_file_path, env_data)
         logger.info(f'Env for {schain_name} is generated: {env_file_path}')
     run_blockscout_containers(env_file_path)
-    regenerate_nginx_config()
-    restart_nginx()
+    if NETWORK_NAME == 'skale':
+        regenerate_nginx_config()
+        restart_nginx()
     internal_endpoint = get_explorer_endpoint(schain_name)
     logger.info(f'{schain_name} explorer is running on {internal_endpoint} endpoint internally')
     logger.info(f'{schain_name} explorer is running on {schain_name}. subdomain')
