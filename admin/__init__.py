@@ -46,7 +46,7 @@ RE_CAPTCHA_SECRET_KEY = os.environ.get('RE_CAPTCHA_SECRET_KEY')
 NOVES_API_KEY = os.environ.get('NOVES_API_KEY')
 USE_HTTP_ENDPOINT = True if os.environ.get('USE_HTTP_ENDPOINT') == 'true' else False
 PUBLIC_IP = os.environ.get('PUBLIC_IP')
-NETWROK_NAME = os.environ.get('NETWORK_NAME', 'skale')
+NETWORK_NAME = os.environ.get('NETWORK_NAME', 'skale')
 
 SSL_DIR_PATH = os.path.join(SERVER_DATA_DIR, 'certs')
 SSL_CRT_PATH = os.path.join(SSL_DIR_PATH, 'server.crt')
