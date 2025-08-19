@@ -95,7 +95,9 @@ def generate_common_envs(schain_name):
     common_envs = {
         'COMPOSE_PROJECT_NAME': schain_name,
         'BLOCKSCOUT_BACKEND_DOCKER_TAG': BLOCKSCOUT_BACKEND_DOCKER_TAG,
-        'BLOCKSCOUT_FRONTEND_DOCKER_TAG': BLOCKSCOUT_FRONTEND_DOCKER_TAG
+        'BLOCKSCOUT_FRONTEND_DOCKER_TAG': BLOCKSCOUT_FRONTEND_DOCKER_TAG,
+        'NETWORK_NAME': NETWORK_NAME,
+        'NETWORK_CURRENCY': 'sFUEL' if NETWORK_NAME == 'skale' else 'FAIR'
     }
     if WALLET_CONNECT_PROJECT_ID:
         common_envs.update({
