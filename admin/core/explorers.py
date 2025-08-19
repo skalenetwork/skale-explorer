@@ -78,12 +78,17 @@ def generate_blockscout_envs(schain_name):
 
 def generate_port_envs():
     base_port = find_sequential_free_ports(5)
-    return {
+    ports = {
         'PROXY_PORT': str(base_port),
         'DB_PORT': str(base_port + 1),
         'STATS_PORT': str(base_port + 2),
         'STATS_DB_PORT': str(base_port + 3),
     }
+    if NETWORK_NAME == 'fair':
+        ports.update({
+            'PROXY_PORT': '443' if SSL_ENABLED else '80',
+        })
+    return ports
 
 
 def generate_common_envs(schain_name):
