@@ -149,17 +149,12 @@ def generate_network_envs():
         return {
             'HOST': HOST_DOMAIN,
             'PROXY_BASE_PORT': 443,
-            'NEXT_PUBLIC_API_WEBSOCKET_PROTOCOL': 'wss',
-            'NEXT_PUBLIC_API_PROTOCOL': 'https',
-            'STATS_PROTOCOL': 'https',
-            'NEXT_PUBLIC_APP_PROTOCOL': 'https',
+            'SSL_ENABLED': 'true',
             'BLOCKSCOUT_PROXY_CERTS_PATH': HOST_SSL_DIR_PATH,
-            'BLOCKSCOUT_PROXY_CONFIG_DIR': BLOCKSCOUT_PROXY_SSL_CONFIG_DIR,
         }
     public_ip = requests.get('https://api.ipify.org').content.decode('utf8')
-    if HOST:
-        public_ip = HOST
+    if PUBLIC_IP:
+        public_ip = PUBLIC_IP
     return {
         'HOST': str(public_ip),
-        'BLOCKSCOUT_PROXY_CONFIG_DIR': BLOCKSCOUT_PROXY_CONFIG_DIR,
     }
