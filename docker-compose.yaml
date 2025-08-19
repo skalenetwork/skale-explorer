@@ -12,7 +12,6 @@ services:
     environment:
       OPTION: ${OPTION}
       HOST_DIR_PATH: ${HOST_DIR_PATH}
-      SSL_ENABLED: ${SSL_ENABLED:-true}
       IS_TESTNET: ${IS_TESTNET:-false}
       NETWORK_NAME: ${NETWORK_NAME:-skale}
       BLOCKSCOUT_BACKEND_DOCKER_TAG: ${BLOCKSCOUT_BACKEND_DOCKER_TAG:-2.3.0}
