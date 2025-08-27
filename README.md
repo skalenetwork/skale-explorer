@@ -61,7 +61,8 @@ To run explorer-admin, `.env` file shoudl be created in the project root directo
 - DB_PASSWORD - password for postgres database _(optional)_
 - RE_CAPTCHA_SECRET_KEY - private key used on blockscout server side to securely verify that user interactions on your website are performed by humans _(optional)_
 - USE_HTTP_ENDPOINT - set to 'true' to use IP endpoints instead of domain endpoints for devnet support _(optional)_
-- HOST - override auto-detected public IP address with custom host value _(optional)_
+- PUBLIC_IP - override auto-detected public IP address with custom host value _(optional)_
+- NETWORK_NAME - name of the network to display in blockscout, set "fair" or "skale" _(optional)_
 
 ## Additional Documentation
 
