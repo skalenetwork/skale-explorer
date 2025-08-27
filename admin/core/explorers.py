@@ -1,7 +1,6 @@
 import json
 import logging
 import os
-from time import sleep
 
 import requests
 
@@ -18,7 +17,6 @@ from admin.core.containers import (restart_nginx,
                                    is_explorer_running, run_blockscout_containers,
                                    stop_blockscout_containers)
 from admin.core.endpoints import is_dkg_passed, get_schain_endpoint, get_chain_id
-from admin.core.verify import verify
 from admin.utils.helper import find_sequential_free_ports, write_json_into_env
 
 logger = logging.getLogger(__name__)
@@ -115,7 +113,7 @@ def generate_schain_envs(schain_name):
         schain_app_name = schain_name
     if NETWORK_NAME == 'fair' and network == 'testnet':
         schain_app_name = 'FAIR Testnet'
-    else :
+    else:
         schain_app_name = 'FAIR'
     config_host_path = generate_config(schain_name)
     schain_data_dir = f'{BLOCKSCOUT_DATA_DIR}/{schain_name}'
