@@ -142,7 +142,7 @@ def generate_network_envs():
         return {
             'HOST': HOST_DOMAIN,
             'PROXY_BASE_PORT': str(443),
-            'SSL_ENABLED': 'true',
+            'SSL': 'true',
             'BLOCKSCOUT_PROXY_CERTS_PATH': HOST_SSL_DIR_PATH,
             'BLOCKSCOUT_PROXY_CONFIG_DIR': BLOCKSCOUT_PROXY_SSL_CONFIG_DIR
         }
