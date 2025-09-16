@@ -45,6 +45,8 @@ NOVES_API_KEY = os.environ.get('NOVES_API_KEY')
 USE_HTTP_ENDPOINT = True if os.environ.get('USE_HTTP_ENDPOINT') == 'true' else False
 PUBLIC_IP = os.environ.get('PUBLIC_IP')
 NETWORK_NAME = os.environ.get('NETWORK_NAME', 'skale')
+STATIC_BLOCK_REWARD = os.environ.get('STATIC_BLOCK_REWARD', '2500000000000000000')
+BURNT_FEE_FRACTION = os.environ.get('BURNT_FEE_FRACTION', '0.5')
 
 if NETWORK_NAME == 'fair':
     DOCKER_COMPOSE_CONFIG_PATH = os.path.join(BLOCKSCOUT_PATH,
