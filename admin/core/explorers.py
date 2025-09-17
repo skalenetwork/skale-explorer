@@ -4,12 +4,13 @@ import os
 
 import requests
 
-from admin import (BLOCKSCOUT_DATA_DIR, BURNT_FEE_FRACTION, ENVS_DIR_PATH, BLOCKSCOUT_PROXY_CONFIG_DIR,
+from admin import (BLOCKSCOUT_DATA_DIR, BURNT_FEE_FRACTION, ENVS_DIR_PATH,
                    SSL_ENABLED, RE_CAPTCHA_SECRET_KEY, NOVES_SUPPORTED_CHAINS,
-                   HOST_DOMAIN, BLOCKSCOUT_PROXY_SSL_CONFIG_DIR, HOST_SSL_DIR_PATH, STATIC_BLOCK_REWARD,
+                   HOST_DOMAIN, BLOCKSCOUT_PROXY_SSL_CONFIG_DIR, HOST_SSL_DIR_PATH,
                    WALLET_CONNECT_PROJECT_ID, BLOCKSCOUT_BACKEND_DOCKER_TAG,
                    BLOCKSCOUT_FRONTEND_DOCKER_TAG, IS_TESTNET, DB_PASSWORD,
-                   NOVES_API_KEY, PUBLIC_IP, NETWORK_NAME)
+                   NOVES_API_KEY, PUBLIC_IP, NETWORK_NAME, BLOCKSCOUT_PROXY_CONFIG_DIR,
+                   STATIC_BLOCK_REWARD)
 from admin.configs.meta import get_explorer_endpoint
 from admin.configs.nginx import regenerate_nginx_config
 from admin.configs.schains import generate_config
