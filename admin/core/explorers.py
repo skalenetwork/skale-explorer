@@ -112,10 +112,11 @@ def generate_schain_envs(schain_name):
         schain_app_name = requests.get(chains_metadata_url).json()[schain_name]['alias']
     except KeyError:
         schain_app_name = schain_name
-    if NETWORK_NAME == 'fair' and network == 'testnet':
-        schain_app_name = 'FAIR Testnet'
-    else:
-        schain_app_name = 'FAIR'
+    if NETWORK_NAME == 'fair':
+        if network == 'testnet':
+            schain_app_name = 'FAIR Testnet'
+        else:
+            schain_app_name = 'FAIR'
     config_host_path = generate_config(schain_name)
     schain_data_dir = f'{BLOCKSCOUT_DATA_DIR}/{schain_name}'
     schain_envs = {
@@ -147,7 +148,7 @@ def generate_network_envs():
     if SSL_ENABLED:
         return {
             'HOST': HOST_DOMAIN,
-            'PROXY_BASE_PORT': str(443),
+            'PROXY_BASE_PORT': '443',
             'SSL': 'true',
             'BLOCKSCOUT_PROXY_CERTS_PATH': HOST_SSL_DIR_PATH,
             'BLOCKSCOUT_PROXY_CONFIG_DIR': BLOCKSCOUT_PROXY_SSL_CONFIG_DIR
