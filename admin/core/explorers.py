@@ -152,9 +152,10 @@ def generate_network_envs():
             'BLOCKSCOUT_PROXY_CERTS_PATH': HOST_SSL_DIR_PATH,
             'BLOCKSCOUT_PROXY_CONFIG_DIR': BLOCKSCOUT_PROXY_SSL_CONFIG_DIR
         }
-    public_ip = requests.get('https://api.ipify.org').content.decode('utf8')
     if PUBLIC_IP:
         public_ip = PUBLIC_IP
+    else:
+        public_ip = requests.get('https://api.ipify.org').content.decode('utf8')
     return {
         'HOST': public_ip,
         'BLOCKSCOUT_PROXY_CONFIG_DIR': BLOCKSCOUT_PROXY_CONFIG_DIR
