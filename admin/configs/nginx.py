@@ -1,7 +1,7 @@
 import fnmatch
 import os
 from admin import (EXPLORERS_NGINX_CONFIG_PATH, SSL_CRT_PATH, SSL_KEY_PATH,
-                   ENVS_DIR_PATH, SSL_ENABLED)
+                   ENVS_DIR_PATH, SSL_ENABLED, HOST_DOMAIN, NETWORK_NAME)
 import crossplane
 from admin.utils.helper import read_env_file
 
@@ -54,6 +54,9 @@ def insert_proxy_headers(config):
 
 
 def generate_base_nginx_config(schain_name, explorer_endpoint):
+    server_name = f'{schain_name}.*'
+    if NETWORK_NAME == 'fair':
+        server_name = HOST_DOMAIN
     config = {
         "directive": "server",
         "args": [],
@@ -67,39 +70,7 @@ def generate_base_nginx_config(schain_name, explorer_endpoint):
             {
                 "directive": "server_name",
                 "args": [
-                    f"{schain_name}.*"
-                ]
-            },
-            {
-                "directive": "location",
-                "args": [
-                    "/socket"
-                ],
-                "block": [
-                    {
-                        "directive": "proxy_http_version",
-                        "args": [
-                            '1.1'
-                        ]
-                    },
-                    {
-                        "directive": "proxy_set_header",
-                        "args": [
-                            'Upgrade', '$http_upgrade'
-                        ]
-                    },
-                    {
-                        "directive": "proxy_set_header",
-                        "args": [
-                            'Connection', "upgrade"
-                        ]
-                    },
-                    {
-                        "directive": "proxy_pass",
-                        "args": [
-                            explorer_endpoint
-                        ]
-                    }
+                    server_name
                 ]
             },
             {

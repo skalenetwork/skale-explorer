@@ -1,16 +1,16 @@
 import json
 import logging
 import os
-from time import sleep
 
 import requests
 
-from admin import (BLOCKSCOUT_DATA_DIR, ENVS_DIR_PATH, BLOCKSCOUT_PROXY_CONFIG_DIR,
+from admin import (BLOCKSCOUT_DATA_DIR, BURNT_FEE_FRACTION, ENVS_DIR_PATH,
                    SSL_ENABLED, RE_CAPTCHA_SECRET_KEY, NOVES_SUPPORTED_CHAINS,
                    HOST_DOMAIN, BLOCKSCOUT_PROXY_SSL_CONFIG_DIR, HOST_SSL_DIR_PATH,
                    WALLET_CONNECT_PROJECT_ID, BLOCKSCOUT_BACKEND_DOCKER_TAG,
                    BLOCKSCOUT_FRONTEND_DOCKER_TAG, IS_TESTNET, DB_PASSWORD,
-                   NOVES_API_KEY, HOST)
+                   NOVES_API_KEY, PUBLIC_IP, NETWORK_NAME, BLOCKSCOUT_PROXY_CONFIG_DIR,
+                   STATIC_BLOCK_REWARD)
 from admin.configs.meta import get_explorer_endpoint
 from admin.configs.nginx import regenerate_nginx_config
 from admin.configs.schains import generate_config
@@ -18,7 +18,6 @@ from admin.core.containers import (restart_nginx,
                                    is_explorer_running, run_blockscout_containers,
                                    stop_blockscout_containers)
 from admin.core.endpoints import is_dkg_passed, get_schain_endpoint, get_chain_id
-from admin.core.verify import verify
 from admin.utils.helper import find_sequential_free_ports, write_json_into_env
 
 logger = logging.getLogger(__name__)
@@ -29,8 +28,6 @@ def check_explorer_for_schain(schain_name, update=False):
         return
     if not is_explorer_running(schain_name):
         run_explorer_for_schain(schain_name, update)
-        sleep(60)
-        verify(schain_name)
 
 
 def run_explorer_for_schain(schain_name, update=False):
@@ -90,7 +87,7 @@ def generate_common_envs(schain_name):
     common_envs = {
         'COMPOSE_PROJECT_NAME': schain_name,
         'BLOCKSCOUT_BACKEND_DOCKER_TAG': BLOCKSCOUT_BACKEND_DOCKER_TAG,
-        'BLOCKSCOUT_FRONTEND_DOCKER_TAG': BLOCKSCOUT_FRONTEND_DOCKER_TAG
+        'BLOCKSCOUT_FRONTEND_DOCKER_TAG': BLOCKSCOUT_FRONTEND_DOCKER_TAG,
     }
     if WALLET_CONNECT_PROJECT_ID:
         common_envs.update({
@@ -115,6 +112,11 @@ def generate_schain_envs(schain_name):
         schain_app_name = requests.get(chains_metadata_url).json()[schain_name]['alias']
     except KeyError:
         schain_app_name = schain_name
+    if NETWORK_NAME == 'fair':
+        if network == 'testnet':
+            schain_app_name = 'FAIR Testnet'
+        else:
+            schain_app_name = 'FAIR'
     config_host_path = generate_config(schain_name)
     schain_data_dir = f'{BLOCKSCOUT_DATA_DIR}/{schain_name}'
     schain_envs = {
@@ -134,6 +136,11 @@ def generate_schain_envs(schain_name):
             'NOVES_API_KEY': NOVES_API_KEY,
             'NEXT_PUBLIC_TRANSACTION_INTERPRETATION_PROVIDER': 'noves'
         })
+    if NETWORK_NAME == 'fair':
+        schain_envs.update({
+            'STATIC_BLOCK_REWARD': STATIC_BLOCK_REWARD,
+            'BURNT_FEE_FRACTION': BURNT_FEE_FRACTION
+        })
     return schain_envs
 
 
@@ -141,18 +148,16 @@ def generate_network_envs():
     if SSL_ENABLED:
         return {
             'HOST': HOST_DOMAIN,
-            'PROXY_BASE_PORT': 443,
-            'NEXT_PUBLIC_API_WEBSOCKET_PROTOCOL': 'wss',
-            'NEXT_PUBLIC_API_PROTOCOL': 'https',
-            'STATS_PROTOCOL': 'https',
-            'NEXT_PUBLIC_APP_PROTOCOL': 'https',
+            'PROXY_BASE_PORT': '443',
+            'SSL': 'true',
             'BLOCKSCOUT_PROXY_CERTS_PATH': HOST_SSL_DIR_PATH,
-            'BLOCKSCOUT_PROXY_CONFIG_DIR': BLOCKSCOUT_PROXY_SSL_CONFIG_DIR,
+            'BLOCKSCOUT_PROXY_CONFIG_DIR': BLOCKSCOUT_PROXY_SSL_CONFIG_DIR
         }
-    public_ip = requests.get('https://api.ipify.org').content.decode('utf8')
-    if HOST:
-        public_ip = HOST
+    if PUBLIC_IP:
+        public_ip = PUBLIC_IP
+    else:
+        public_ip = requests.get('https://api.ipify.org').content.decode('utf8')
     return {
-        'HOST': str(public_ip),
-        'BLOCKSCOUT_PROXY_CONFIG_DIR': BLOCKSCOUT_PROXY_CONFIG_DIR,
+        'HOST': public_ip,
+        'BLOCKSCOUT_PROXY_CONFIG_DIR': BLOCKSCOUT_PROXY_CONFIG_DIR
     }

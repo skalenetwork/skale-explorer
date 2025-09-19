@@ -2,15 +2,13 @@ import os
 
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 PROJECT_PATH = os.path.join(DIR_PATH, os.pardir)
-BLOCKSCOUT_PATH = os.path.join(PROJECT_PATH, 'deps', 'blockscout')
+BLOCKSCOUT_PATH = os.path.join(PROJECT_PATH, 'deps', 'blockscout', 'docker-compose')
 SERVER_DATA_DIR = os.path.join(PROJECT_PATH, 'data')
 ABI_FILEPATH = os.path.join(SERVER_DATA_DIR, 'abi.json')
 GAS_PRICES_FILEPATH = os.path.join(SERVER_DATA_DIR, 'gas_prices.csv')
 EXPLORERS_META_DATA_PATH = os.path.join(SERVER_DATA_DIR, 'meta.json')
 SCHAIN_CONFIG_DIR_PATH = os.path.join(SERVER_DATA_DIR, 'configs')
-DOCKER_COMPOSE_CONFIG_PATH = os.path.join(BLOCKSCOUT_PATH,
-                                          'docker-compose',
-                                          'docker-compose.yml')
+
 DOCKER_COMPOSE_BIN_PATH = '/usr/bin/docker'
 DUMPS_DIR_PATH = os.path.join(SERVER_DATA_DIR, 'dumps')
 ENVS_DIR_PATH = os.path.join(SERVER_DATA_DIR, 'envs')
@@ -29,6 +27,7 @@ BLOCKSCOUT_PROXY_SSL_CONFIG_DIR = os.path.join(HOST_DIR_PATH, 'deps', 'blockscou
 NGINX_CONFIGS_DIR = os.path.join(SERVER_DATA_DIR, 'nginx')
 EXPLORERS_NGINX_CONFIG_PATH = os.path.join(NGINX_CONFIGS_DIR, 'nginx.conf')
 STATS_NGINX_CONFIG_PATH = os.path.join(NGINX_CONFIGS_DIR, 'stats.conf')
+DOCKER_COMPOSE_CONFIG_NAME = 'docker-compose.yml'
 
 ENDPOINT = os.environ.get('ETH_ENDPOINT')
 ETH_API_KEY = os.environ.get('ETH_API_KEY')
@@ -45,7 +44,16 @@ DB_PASSWORD = os.environ.get('DB_PASSWORD')
 RE_CAPTCHA_SECRET_KEY = os.environ.get('RE_CAPTCHA_SECRET_KEY')
 NOVES_API_KEY = os.environ.get('NOVES_API_KEY')
 USE_HTTP_ENDPOINT = True if os.environ.get('USE_HTTP_ENDPOINT') == 'true' else False
-HOST = os.environ.get('HOST')
+PUBLIC_IP = os.environ.get('PUBLIC_IP')
+NETWORK_NAME = os.environ.get('NETWORK_NAME', 'skale')
+STATIC_BLOCK_REWARD = os.environ.get('STATIC_BLOCK_REWARD', '2500000000000000000')
+BURNT_FEE_FRACTION = os.environ.get('BURNT_FEE_FRACTION', '0.5')
+
+if NETWORK_NAME == 'fair':
+    DOCKER_COMPOSE_CONFIG_NAME = 'docker-compose.fair.yml'
+
+DOCKER_COMPOSE_CONFIG_PATH = os.path.join(BLOCKSCOUT_PATH,
+                                          DOCKER_COMPOSE_CONFIG_NAME)
 
 SSL_DIR_PATH = os.path.join(SERVER_DATA_DIR, 'certs')
 SSL_CRT_PATH = os.path.join(SSL_DIR_PATH, 'server.crt')
