@@ -51,7 +51,7 @@ def get_verified_contract_list(schain_name):
             f'{schain_explorer_endpoint}/api?module=contract&action=listcontracts&filter=verified',
             headers=headers
         ).json()['result']
-        addresses = [Web3.toChecksumAddress(contract['Address']) for contract in result]
+        addresses = [Web3.to_checksum_address(contract['Address']) for contract in result]
     except requests.exceptions.ConnectionError as e:
         logger.warning(f'get_contract_list failed with {e}')
     return addresses
