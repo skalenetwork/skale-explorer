@@ -132,3 +132,4 @@ dmypy.json
 .idea/
 __pycache__
 data/*
+.DS_Store
