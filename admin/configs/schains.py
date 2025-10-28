@@ -79,7 +79,7 @@ def generate_owner_accounts(schain_name):
 
 
 def add_to_accounts(accounts, address, balance=0, nonce=0, code=""):
-    fixed_address = Web3.toChecksumAddress(address)
+    fixed_address = Web3.to_checksum_address(address)
     account = {
         'balance': str(balance),
     }
@@ -108,7 +108,7 @@ def generate_verify_data():
         **generate_meta()
     }
     return {
-        Web3.toChecksumAddress(k): raw_verification_dict[k]
+        Web3.to_checksum_address(k): raw_verification_dict[k]
         for k in raw_verification_dict
     }
 
