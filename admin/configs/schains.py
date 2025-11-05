@@ -119,7 +119,7 @@ def fetch_predeployed_info(schain_name, contract_addresses):
     provider = HTTPProvider(schain_endpoint)
     web3 = Web3(provider)
     for address in contract_addresses:
-        code = web3.eth.get_code(address).hex()
+        code = web3.eth.get_code(address).to_0x_hex()
         if address == ETHERBASE_ADDRESS:
             add_to_accounts(predeployed_contracts, address, balance=ETHERBASE_ALLOC, code=code)
         else:
