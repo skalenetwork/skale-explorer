@@ -32,6 +32,11 @@ def check_explorer_for_schain(schain_name, update=False):
 
 def run_explorer_for_schain(schain_name, update=False):
     env_file_path = os.path.join(ENVS_DIR_PATH, f'{schain_name}.env')
+
+    if os.path.exists(env_file_path) and update:
+        stop_blockscout_containers(env_file_path)
+        logger.info(f'Stopped containers for {schain_name} before update')
+
     if not os.path.exists(env_file_path) or update:
         env_data = generate_blockscout_envs(schain_name)
         write_json_into_env(env_file_path, env_data)
