@@ -23,4 +23,14 @@ case "$1" in
 esac
 
 WORKDIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]:-$0}"; )" &> /dev/null && pwd 2> /dev/null; )";
+
+if [ "$OPTION" = "--update" ]; then
+  BLOCKSCOUT_TAG=$(grep -E '^BLOCKSCOUT_BACKEND_DOCKER_TAG=' "$WORKDIR/.env" | cut -d '=' -f2-)
+  if [ -n "$BLOCKSCOUT_TAG" ]; then
+    echo "Checking out deps/blockscout to tag $BLOCKSCOUT_TAG..."
+    git -C "$WORKDIR/deps/blockscout" fetch --tags
+    git -C "$WORKDIR/deps/blockscout" checkout "$BLOCKSCOUT_TAG"
+  fi
+fi
+
 HOST_DIR_PATH=$WORKDIR OPTION=$OPTION docker compose -f $WORKDIR/docker-compose.yaml up -d --build
